@@ -245,7 +245,7 @@ export default function DashboardPage() {
                         <h4 className="text-sm font-bold text-slate-800">
                           {item.student.name}{" "}
                           <span className="font-normal text-slate-500">
-                            ({item.student.class} - NISN: {item.student.nisn})
+                            ({item.student.class} - {item.student.username || item.student.nisn})
                           </span>
                         </h4>
                         <p className="text-xs text-slate-600 line-clamp-2">
@@ -324,7 +324,7 @@ export default function DashboardPage() {
               <span className="text-xs font-bold text-white">Alur Konsel.AI</span>
             </div>
             <p className="text-[11px] text-slate-400 leading-relaxed">
-              Siswa membuka menu <strong>Konsel.AI</strong> di Bot WhatsApp, memasukkan NISN & password, lalu curhat secara langsung. Sistem secara otomatis men-triase masalah dan memberi peringatan ke nomor WhatsApp Guru BK jika terdeteksi masalah darurat.
+              Siswa membuka menu <strong>Konsel.AI</strong> di Bot WhatsApp, memasukkan Username & password, lalu curhat secara langsung. Sistem secara otomatis men-triase masalah dan memberi peringatan ke nomor WhatsApp Guru BK jika terdeteksi masalah darurat.
             </p>
           </div>
         </div>

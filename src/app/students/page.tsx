@@ -6,8 +6,6 @@ import {
   Plus,
   Search,
   KeyRound,
-  Eye,
-  EyeOff,
   Edit2,
   Trash2,
   Phone,
@@ -22,17 +20,16 @@ export default function StudentsPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [classFilter, setClassFilter] = useState("ALL");
-  const [showPasswordMap, setShowPasswordMap] = useState<Record<string, boolean>>({});
+  const [resettingId, setResettingId] = useState<string | null>(null);
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingStudent, setEditingStudent] = useState<any | null>(null);
   const [form, setForm] = useState({
-    nisn: "",
+    username: "",
     name: "",
     className: "",
     major: "",
-    password: "",
     phone: "",
     parentPhone: "",
   });
@@ -63,18 +60,13 @@ export default function StudentsPage() {
     fetchStudents();
   }, [classFilter]);
 
-  const togglePasswordVisibility = (id: string) => {
-    setShowPasswordMap((prev) => ({ ...prev, [id]: !prev[id] }));
-  };
-
   const handleOpenAdd = () => {
     setEditingStudent(null);
     setForm({
-      nisn: "",
+      username: "",
       name: "",
       className: "XII RPL 1",
       major: "Rekayasa Perangkat Lunak",
-      password: "siswa" + Math.floor(100 + Math.random() * 900),
       phone: "",
       parentPhone: "",
     });
@@ -85,16 +77,44 @@ export default function StudentsPage() {
   const handleOpenEdit = (student: any) => {
     setEditingStudent(student);
     setForm({
-      nisn: student.nisn,
+      username: student.username || student.nisn || "",
       name: student.name,
       className: student.class,
       major: student.major || "",
-      password: student.password,
       phone: student.phone || "",
       parentPhone: student.parentPhone || "",
     });
     setErrorMessage("");
     setIsModalOpen(true);
+  };
+
+  const handleResetPassword = async (stu: any) => {
+    const studentUser = stu.username || stu.nisn;
+    if (!confirm(`Reset kata sandi siswa "${stu.name}" (${studentUser}) ke default 123456?`)) {
+      return;
+    }
+
+    try {
+      setResettingId(stu.id);
+      const res = await fetch("/api/students/reset-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: studentUser, id: stu.id }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setSuccessMessage(`✅ Kata sandi untuk ${stu.name} (${studentUser}) berhasil di-reset ke default 123456.`);
+        setTimeout(() => setSuccessMessage(""), 6000);
+      } else {
+        setErrorMessage(data.message || "Gagal mereset kata sandi siswa.");
+        setTimeout(() => setErrorMessage(""), 6000);
+      }
+    } catch (err: any) {
+      setErrorMessage(err?.message || "Kesalahan jaringan saat mereset kata sandi.");
+      setTimeout(() => setErrorMessage(""), 6000);
+    } finally {
+      setResettingId(null);
+    }
   };
 
   const handleDelete = async (id: string, name: string) => {
@@ -228,7 +248,7 @@ export default function StudentsPage() {
           <div className="relative w-72">
             <input
               type="text"
-              placeholder="Cari nama, NISN, atau No WA..."
+              placeholder="Cari nama, Username, atau No WA..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && fetchStudents()}
@@ -268,10 +288,9 @@ export default function StudentsPage() {
           <table className="w-full text-left text-xs text-slate-600">
             <thead className="bg-slate-50 text-slate-700 font-bold border-b border-slate-200 uppercase tracking-wider text-[10px]">
               <tr>
-                <th className="p-4">NISN (Username WA)</th>
+                <th className="p-4">Username</th>
                 <th className="p-4">Nama Siswa</th>
                 <th className="p-4">Kelas & Jurusan</th>
-                <th className="p-4">Kata Sandi Bot WA</th>
                 <th className="p-4">No. WhatsApp Siswa</th>
                 <th className="p-4">WhatsApp Ortu</th>
                 <th className="p-4 text-center">Konseling</th>
@@ -281,17 +300,16 @@ export default function StudentsPage() {
             <tbody className="divide-y divide-slate-100">
               {students.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="p-8 text-center text-slate-400">
+                  <td colSpan={7} className="p-8 text-center text-slate-400">
                     Tidak ada data siswa ditemukan.
                   </td>
                 </tr>
               ) : (
                 students.map((stu) => {
-                  const showPass = showPasswordMap[stu.id] || false;
                   return (
                     <tr key={stu.id} className="hover:bg-slate-50/70 transition">
                       <td className="p-4 font-mono font-bold text-indigo-600">
-                        {stu.nisn}
+                        {stu.username || stu.nisn}
                       </td>
                       <td className="p-4">
                         <div className="font-bold text-slate-900">{stu.name}</div>
@@ -301,21 +319,6 @@ export default function StudentsPage() {
                         {stu.major && (
                           <div className="text-[11px] text-slate-400 truncate">{stu.major}</div>
                         )}
-                      </td>
-                      <td className="p-4">
-                        <div className="flex items-center gap-2">
-                          <code className="bg-slate-100 px-2 py-1 rounded text-slate-800 font-mono font-bold">
-                            {showPass ? stu.password : "••••••••"}
-                          </code>
-                          <button
-                            type="button"
-                            onClick={() => togglePasswordVisibility(stu.id)}
-                            className="text-slate-400 hover:text-slate-600"
-                            title="Tampilkan / Sembunyikan"
-                          >
-                            {showPass ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                          </button>
-                        </div>
                       </td>
                       <td className="p-4 font-mono">
                         {stu.phone ? (
@@ -352,6 +355,16 @@ export default function StudentsPage() {
                       </td>
                       <td className="p-4 text-right">
                         <div className="flex items-center justify-end gap-2">
+                          <button
+                            type="button"
+                            onClick={() => handleResetPassword(stu)}
+                            disabled={resettingId === stu.id}
+                            className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-semibold text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-lg transition disabled:opacity-50"
+                            title="Reset kata sandi siswa ke default 123456"
+                          >
+                            <KeyRound className={`w-3.5 h-3.5 ${resettingId === stu.id ? "animate-spin text-amber-600" : ""}`} />
+                            <span>{resettingId === stu.id ? "Mereset..." : "Reset Password (123456)"}</span>
+                          </button>
                           <button
                             onClick={() => handleOpenEdit(stu)}
                             className="p-1.5 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition"
@@ -401,35 +414,22 @@ export default function StudentsPage() {
             )}
 
             <form onSubmit={handleSubmit} className="space-y-3.5">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    NISN (Username WA) *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    disabled={!!editingStudent}
-                    value={form.nisn}
-                    onChange={(e) => setForm({ ...form, nisn: e.target.value })}
-                    placeholder="Contoh: 20240101"
-                    className="w-full text-xs p-2.5 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none disabled:bg-slate-100"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Password Bot WA *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={form.password}
-                    onChange={(e) => setForm({ ...form, password: e.target.value })}
-                    placeholder="Contoh: siswa123"
-                    className="w-full text-xs p-2.5 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none font-mono"
-                  />
-                </div>
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Username Akun Sakuci *
+                </label>
+                <input
+                  type="text"
+                  required
+                  disabled={!!editingStudent}
+                  value={form.username}
+                  onChange={(e) => setForm({ ...form, username: e.target.value })}
+                  placeholder="Contoh: 572abduroh"
+                  className="w-full text-xs p-2.5 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none disabled:bg-slate-100 font-mono"
+                />
+                <p className="text-[10px] text-slate-400 mt-1">
+                  Username resmi siswa yang terdaftar di sistem Sakuci. Kata sandi default adalah 123456.
+                </p>
               </div>
 
               <div>

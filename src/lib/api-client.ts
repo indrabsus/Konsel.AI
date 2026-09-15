@@ -133,6 +133,14 @@ export const sakuciBackend = {
     });
   },
 
+  // Reset Student Password to 123456
+  async resetStudentPassword(username: string, id?: string) {
+    return sakuciFetch<{ success: boolean; message: string }>("/api/konsel/students/reset-password", {
+      method: "POST",
+      body: JSON.stringify({ username, id }),
+    });
+  },
+
   // Notification Log
   async saveNotificationLog(data: {
     sessionId?: string | null;

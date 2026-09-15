@@ -26,8 +26,8 @@ interface ChatMessageItem {
 
 export default function SimulatorPage() {
   const [students, setStudents] = useState<any[]>([]);
-  const [selectedNisn, setSelectedNisn] = useState("20240101");
-  const [password, setPassword] = useState("siswa123");
+  const [selectedUsername, setSelectedUsername] = useState("");
+  const [password, setPassword] = useState("123456");
   const [phone, setPhone] = useState("081234567891");
 
   const [authSession, setAuthSession] = useState<any | null>(null);
@@ -53,6 +53,7 @@ export default function SimulatorPage() {
       .then((data) => {
         if (data.success && data.students?.length) {
           setStudents(data.students);
+          setSelectedUsername(data.students[0].username || data.students[0].nisn || "");
         }
       })
       .catch(console.error);
@@ -62,11 +63,11 @@ export default function SimulatorPage() {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const handleStudentSelect = (nisn: string) => {
-    const s = students.find((item) => item.nisn === nisn);
+  const handleStudentSelect = (user: string) => {
+    const s = students.find((item) => (item.username || item.nisn) === user);
     if (s) {
-      setSelectedNisn(s.nisn);
-      setPassword(s.password);
+      setSelectedUsername(s.username || s.nisn);
+      setPassword("123456");
       setPhone(s.phone || "081234567890");
     }
   };
@@ -81,7 +82,7 @@ export default function SimulatorPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          username: selectedNisn,
+          username: selectedUsername,
           password,
           phone,
         }),
@@ -89,7 +90,7 @@ export default function SimulatorPage() {
 
       const data = await res.json();
       if (!res.ok || !data.success) {
-        setAuthError(data.message || "Gagal masuk. Periksa NISN dan password.");
+        setAuthError(data.message || "Gagal masuk. Periksa username dan password.");
       } else {
         setAuthSession(data);
         const timeNow = new Date().toLocaleTimeString("id-ID", {
@@ -302,14 +303,17 @@ export default function SimulatorPage() {
                   <label className="text-[11px] font-bold text-slate-600">Pilih Siswa Contoh:</label>
                   <select
                     onChange={(e) => handleStudentSelect(e.target.value)}
-                    value={selectedNisn}
+                    value={selectedUsername}
                     className="w-full text-xs p-2 bg-slate-50 border border-slate-300 rounded-lg"
                   >
-                    {students.map((s) => (
-                      <option key={s.nisn} value={s.nisn}>
-                        {s.name} ({s.class}) - Username: {s.username || s.nisn}
-                      </option>
-                    ))}
+                    {students.map((s) => {
+                      const user = s.username || s.nisn;
+                      return (
+                        <option key={s.id || user} value={user}>
+                          {s.name} ({s.class}) - Username: {user}
+                        </option>
+                      );
+                    })}
                   </select>
                 </div>
 
@@ -319,9 +323,9 @@ export default function SimulatorPage() {
                     <input
                       type="text"
                       required
-                      value={selectedNisn}
-                      onChange={(e) => setSelectedNisn(e.target.value)}
-                      placeholder="Contoh: 392destrija"
+                      value={selectedUsername}
+                      onChange={(e) => setSelectedUsername(e.target.value)}
+                      placeholder="Contoh: 572abduroh"
                       className="w-full text-xs p-2 bg-slate-50 border border-slate-300 rounded-lg font-mono"
                     />
                   </div>

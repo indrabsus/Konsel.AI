@@ -172,10 +172,10 @@ function CounselingContent() {
         <form onSubmit={handleSearchSubmit} className="relative min-w-[280px]">
           <input
             type="text"
-            placeholder="Cari nama, NISN, atau kelas..."
+            placeholder="Cari nama, username, atau kelas..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-4 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white"
+            className="w-full pl-9 pr-4 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white"
           />
           <Search className="w-4 h-4 text-slate-400 absolute left-2.5 top-2" />
         </form>
@@ -227,7 +227,7 @@ function CounselingContent() {
                         {item.student?.name}
                       </h4>
                       <p className="text-xs text-slate-500 font-medium">
-                        {item.student?.class} • NISN: {item.student?.nisn}
+                        {item.student?.class} • {item.student?.username || item.student?.nisn}
                       </p>
                     </div>
 
@@ -276,7 +276,7 @@ function CounselingContent() {
                         {selectedSession.student?.name}
                       </h3>
                       <p className="text-xs text-slate-500">
-                        {selectedSession.student?.class} • {selectedSession.student?.major || "Siswa SMK"} • NISN: {selectedSession.student?.nisn}
+                        {selectedSession.student?.class} • {selectedSession.student?.major || "Siswa SMK"} • {selectedSession.student?.username || selectedSession.student?.nisn}
                       </p>
                     </div>
                   </div>
