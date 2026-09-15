@@ -1,12 +1,15 @@
 // src/app/api/settings/route.ts
 import { NextResponse } from "next/server";
+import { sakuciBackend } from "@/lib/api-client";
 import { sendWhatsAppNotification } from "@/lib/whatsapp";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
-    const settingsObj: Record<string, string> = {
+    const backendData = await sakuciBackend.getSettings();
+
+    const fallbackSettings: Record<string, string> = {
       WA_GATEWAY_URL: process.env.WA_GATEWAY_URL || "https://bot.smksangkuriang1cimahi.sch.id/wa/kirim",
       WA_GATEWAY_TOKEN: process.env.WA_GATEWAY_TOKEN || "",
       WA_GURU_BK_NUMBER: process.env.WA_GURU_BK_NUMBER || "081234567890",
@@ -16,16 +19,32 @@ export async function GET() {
       SAKUCI_API_URL: process.env.SAKUCI_API_URL || "https://eks.smksangkuriang1cimahi.sch.id",
     };
 
+    const mergedSettings = {
+      ...fallbackSettings,
+      ...(backendData?.settings || {}),
+    };
+
     return NextResponse.json({
       success: true,
-      settings: settingsObj,
-      notificationLogs: [],
+      settings: mergedSettings,
+      notificationLogs: backendData?.notificationLogs || [],
     });
   } catch (error: any) {
     console.error("Error in GET /api/settings:", error);
     return NextResponse.json(
-      { success: false, message: "Gagal mengambil pengaturan sistem." },
-      { status: 500 }
+      {
+        success: true,
+        settings: {
+          WA_GATEWAY_URL: process.env.WA_GATEWAY_URL || "https://bot.smksangkuriang1cimahi.sch.id/wa/kirim",
+          WA_GATEWAY_TOKEN: process.env.WA_GATEWAY_TOKEN || "",
+          WA_GURU_BK_NUMBER: process.env.WA_GURU_BK_NUMBER || "081234567890",
+          NOTIF_ALERT_LEVEL: process.env.NOTIF_ALERT_LEVEL || "ALL",
+          OLLAMA_BASE_URL: process.env.OLLAMA_BASE_URL || "https://ai.smksangkuriang1cimahi.sch.id",
+          OLLAMA_MODEL: process.env.OLLAMA_MODEL || "qwen2.5:7b",
+          SAKUCI_API_URL: process.env.SAKUCI_API_URL || "https://eks.smksangkuriang1cimahi.sch.id",
+        },
+        notificationLogs: [],
+      }
     );
   }
 }
@@ -33,14 +52,14 @@ export async function GET() {
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { action } = body;
+    const { action, settings } = body;
 
     // Aksi Test Kirim WhatsApp Notifikasi
     if (action === "test_wa") {
       const res = await sendWhatsAppNotification({
-        studentName: "Ahmad Rizky (Tes Sistem)",
-        studentClass: "XII RPL 1",
-        studentNisn: "20240101",
+        studentName: "Siswa Pengujian (Tes Sistem)",
+        studentClass: "X PPLG 1",
+        studentNisn: "0000000000",
         triageLevel: "MERAH",
         triageReason: "Uji coba pengiriman notifikasi darurat Konsel.AI",
         summary: "Pesan uji coba koneksi gateway WhatsApp untuk Guru BK.",
@@ -54,14 +73,32 @@ export async function POST(req: Request) {
       });
     }
 
-    return NextResponse.json({
-      success: true,
-      message: "Pengaturan sistem dikonfigurasi melalui Environment Variables di Vercel.",
-    });
+    // Aksi Simpan Pengaturan
+    if (settings && typeof settings === "object") {
+      const saveRes = await sakuciBackend.saveSettings(settings);
+
+      // Sinkronisasi memori lokal proses
+      if (settings.WA_GATEWAY_URL) process.env.WA_GATEWAY_URL = settings.WA_GATEWAY_URL;
+      if (settings.WA_GATEWAY_TOKEN !== undefined) process.env.WA_GATEWAY_TOKEN = settings.WA_GATEWAY_TOKEN;
+      if (settings.WA_GURU_BK_NUMBER) process.env.WA_GURU_BK_NUMBER = settings.WA_GURU_BK_NUMBER;
+      if (settings.NOTIF_ALERT_LEVEL) process.env.NOTIF_ALERT_LEVEL = settings.NOTIF_ALERT_LEVEL;
+      if (settings.OLLAMA_BASE_URL) process.env.OLLAMA_BASE_URL = settings.OLLAMA_BASE_URL;
+      if (settings.OLLAMA_MODEL) process.env.OLLAMA_MODEL = settings.OLLAMA_MODEL;
+
+      return NextResponse.json({
+        success: true,
+        message: saveRes?.message || "Pengaturan berhasil disimpan ke sistem dan basis data Sakuci.",
+      });
+    }
+
+    return NextResponse.json(
+      { success: false, message: "Format payload pengaturan tidak valid." },
+      { status: 400 }
+    );
   } catch (error: any) {
     console.error("Error in POST /api/settings:", error);
     return NextResponse.json(
-      { success: false, message: "Gagal memproses permintaan." },
+      { success: false, message: error?.message || "Gagal menyimpan pengaturan." },
       { status: 500 }
     );
   }

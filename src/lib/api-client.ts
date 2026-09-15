@@ -162,4 +162,20 @@ export const sakuciBackend = {
       body: JSON.stringify(data),
     });
   },
+
+  // Settings
+  async getSettings() {
+    return sakuciFetch<{
+      success: boolean;
+      settings: Record<string, string>;
+      notificationLogs: any[];
+    }>("/api/konsel/settings");
+  },
+
+  async saveSettings(settings: Record<string, string>) {
+    return sakuciFetch<{ success: boolean; message: string }>("/api/konsel/settings", {
+      method: "POST",
+      body: JSON.stringify({ settings }),
+    });
+  },
 };

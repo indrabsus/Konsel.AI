@@ -210,11 +210,11 @@ async function endCounseling(sessionId) {
               </div>
 
               <div>
-                <div className="flex items-center justify-between mb-1">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 mb-1.5">
                   <label className="text-xs font-semibold text-slate-700">
                     URL WhatsApp Gateway API
                   </label>
-                  <div className="flex items-center gap-1.5">
+                  <div className="flex flex-wrap items-center gap-1.5">
                     <button
                       type="button"
                       onClick={() =>
@@ -225,7 +225,7 @@ async function endCounseling(sessionId) {
                       }
                       className="text-[10px] bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-semibold px-2 py-0.5 rounded border border-indigo-200 transition"
                     >
-                      Preset: Bot Sekolah (bot.smksangkuriang1cimahi.sch.id)
+                      Preset: Bot Sekolah
                     </button>
                     <button
                       type="button"
@@ -327,12 +327,12 @@ async function endCounseling(sessionId) {
               </div>
             </div>
 
-            <div className="flex items-center justify-between pt-2">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-2">
               <button
                 type="button"
                 onClick={handleTestWhatsApp}
                 disabled={testingWa}
-                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition flex items-center gap-1.5"
+                className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-700 text-xs font-semibold rounded-xl transition flex items-center justify-center gap-1.5 cursor-pointer"
               >
                 <Send className="w-3.5 h-3.5" />
                 {testingWa ? "Menguji..." : "Kirim Uji Coba WA"}
@@ -341,7 +341,7 @@ async function endCounseling(sessionId) {
               <button
                 type="submit"
                 disabled={saving}
-                className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl shadow-md shadow-indigo-500/20 transition flex items-center gap-1.5"
+                className="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white text-xs font-bold rounded-xl shadow-md shadow-indigo-500/20 transition flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
               >
                 <Save className="w-4 h-4" />
                 {saving ? "Menyimpan..." : "Simpan Pengaturan"}
@@ -434,10 +434,10 @@ async function endCounseling(sessionId) {
                 </span>
               </div>
               <p className="text-[11px] text-slate-400">
-                Kirim NISN dan password yang dimasukkan siswa di WhatsApp:
+                Kirim Username dan password yang dimasukkan siswa di WhatsApp:
               </p>
               <pre className="text-[10px] bg-slate-900/80 p-2 rounded text-slate-300 overflow-x-auto font-mono">
-                {`{\n  "username": "20240101",\n  "password": "siswa123",\n  "phone": "081234567891"\n}`}
+                {`{\n  "username": "657abyanjih",\n  "password": "password",\n  "phone": "081234567890"\n}`}
               </pre>
             </div>
 
