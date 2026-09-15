@@ -23,12 +23,14 @@ export async function POST(req: Request) {
     const inputUser = String(username).trim();
     const inputPass = String(password).trim();
 
-    // 1. Coba verifikasi langsung ke API Sakuci Express (https://eks.smksangkuriang1cimahi.sch.id)
+    // 1. Coba verifikasi langsung ke API Sakuci Express
     let sakuciAuthSuccess = false;
     let sakuciData: any = null;
 
+    const sakuciBaseUrl = (process.env.SAKUCI_API_URL || "https://eks.smksangkuriang1cimahi.sch.id").replace(/\/$/, "");
+
     try {
-      const sakuciRes = await fetch("https://eks.smksangkuriang1cimahi.sch.id/api/auth/login", {
+      const sakuciRes = await fetch(`${sakuciBaseUrl}/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username: inputUser, password: inputPass }),
