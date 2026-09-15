@@ -167,3 +167,43 @@ Ringkasan: ${params.summary || "Curhat atau obrolan harian santai."}`;
     return { success: false, message: error?.message || "Internal error sending notification" };
   }
 }
+
+/**
+ * Mengirimkan sinyal status "sedang mengetik" (typing presence) ke gateway WhatsApp
+ * agar siswa melihat bot sedang menyusun jawaban.
+ */
+export async function sendWhatsAppTyping(targetNumber?: string | null): Promise<boolean> {
+  if (!targetNumber) return false;
+
+  if (process.env.ENABLE_TYPING_STATUS === "false") {
+    return false;
+  }
+
+  try {
+    const gatewayUrl =
+      process.env.WA_GATEWAY_URL ||
+      "https://bot.smksangkuriang1cimahi.sch.id/wa/kirim";
+    const token = process.env.WA_GATEWAY_TOKEN || "";
+
+    if (gatewayUrl.includes("/wa/kirim") || gatewayUrl.includes("bot.smksangkuriang1cimahi.sch.id")) {
+      const typingUrl = gatewayUrl.replace(/\/wa\/kirim.*$/, "/wa/typing");
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (token) headers["x-api-key"] = token;
+
+      await fetch(typingUrl, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          nomor: targetNumber,
+          presence: "composing",
+        }),
+      }).catch(() => {});
+      return true;
+    }
+
+    return true;
+  } catch {
+    return false;
+  }
+}
+

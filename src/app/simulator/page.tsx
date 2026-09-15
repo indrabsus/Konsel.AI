@@ -398,13 +398,21 @@ export default function SimulatorPage() {
                 })}
 
                 {sending && (
-                  <div className="flex items-start">
-                    <div className="bg-white p-3 rounded-2xl text-xs shadow-sm border border-slate-200 flex items-center gap-2">
-                      <Sparkles className="w-4 h-4 text-indigo-600 animate-spin" />
-                      <span className="text-slate-500 italic">Konsel.AI sedang mengetik respon...</span>
+                  <div className="flex flex-col items-start">
+                    <div className="text-[10px] text-slate-500 mb-0.5 px-1 font-semibold">
+                      Konsel.AI
+                    </div>
+                    <div className="bg-white px-4 py-2.5 rounded-2xl rounded-tl-none text-xs shadow-sm border border-slate-200 flex items-center gap-2.5">
+                      <span className="text-slate-600 font-medium text-[11px]">sedang mengetik</span>
+                      <div className="flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-bounce [animation-delay:-0.3s]"></span>
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-bounce [animation-delay:-0.15s]"></span>
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-bounce"></span>
+                      </div>
                     </div>
                   </div>
                 )}
+
                 <div ref={chatEndRef} />
               </>
             )}

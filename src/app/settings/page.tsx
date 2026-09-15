@@ -25,6 +25,8 @@ export default function SettingsPage() {
     NOTIF_ALERT_LEVEL: "ALL",
     OLLAMA_BASE_URL: "https://ai.smksangkuriang1cimahi.sch.id",
     OLLAMA_MODEL: "qwen2.5:7b",
+    MAX_CONCURRENT_CHATS: "4",
+    ENABLE_TYPING_STATUS: "true",
   });
   const [notificationLogs, setNotificationLogs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -117,7 +119,7 @@ export default function SettingsPage() {
   const sampleBotCode = `// Contoh Integrasi WhatsApp Bot (Node.js / Baileys)
 const KONSEL_API_URL = "http://localhost:3000"; // Ganti dengan URL domain web portal Konsel.AI
 
-// 1. Ketika Siswa Memilih Menu Konsel.AI dan Mengirim NISN & Password:
+// 1. Ketika Siswa Memilih Menu Konsel.AI dan Mengirim Username & Password:
 async function loginStudent(username, password, phone) {
   const response = await fetch(\`\${KONSEL_API_URL}/api/bot/auth\`, {
     method: "POST",
@@ -129,14 +131,24 @@ async function loginStudent(username, password, phone) {
 }
 
 // 2. Ketika Siswa Mengirimkan Pesan Curhat:
-async function sendCounselingMessage(sessionId, studentId, message) {
+async function handleStudentCurhat(sock, remoteJid, sessionId, studentId, messageText) {
+  // A. Tampilkan status "sedang mengetik" di WhatsApp siswa:
+  // - Pada Baileys:
+  await sock.sendPresenceUpdate('composing', remoteJid);
+  // - Pada WhatsApp-Web.js:
+  // const chat = await msg.getChat(); await chat.sendStateTyping();
+
+  // B. Panggil endpoint Konsel.AI (aman dari overload dengan sistem antrian):
   const response = await fetch(\`\${KONSEL_API_URL}/api/bot/chat\`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ sessionId, studentId, message })
+    body: JSON.stringify({ sessionId, studentId, message: messageText })
   });
-  return await response.json();
-  // Mengembalikan: { success: true, reply: "...", triage: "HIJAU"|"KUNING"|"MERAH" }
+  const data = await response.json();
+
+  // C. Matikan status mengetik dan kirimkan respon konseling ke siswa:
+  await sock.sendPresenceUpdate('paused', remoteJid);
+  await sock.sendMessage(remoteJid, { text: data.reply });
 }
 
 // 3. Ketika Siswa Ingin Mengakhiri Konseling (misal ketik "SELESAI"):
@@ -148,6 +160,7 @@ async function endCounseling(sessionId) {
   });
   return await response.json();
 }`;
+
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
@@ -325,7 +338,54 @@ async function endCounseling(sessionId) {
                   className="w-full text-xs p-2.5 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none font-mono"
                 />
               </div>
+
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-xs font-semibold text-slate-700">
+                    Batas Siswa Curhat Bersamaan (Proteksi Beban Server)
+                  </label>
+                  <span className="text-[10px] font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-200">
+                    {settings.MAX_CONCURRENT_CHATS || "4"} Siswa Paralel
+                  </span>
+                </div>
+                <select
+                  value={settings.MAX_CONCURRENT_CHATS || "4"}
+                  onChange={(e) =>
+                    setSettings({ ...settings, MAX_CONCURRENT_CHATS: e.target.value })
+                  }
+                  className="w-full text-xs p-2 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                >
+                  <option value="2">2 Siswa (Paling Aman / Server Ringan)</option>
+                  <option value="4">4 Siswa (Rekomendasi Optimal untuk GPU)</option>
+                  <option value="6">6 Siswa (Server GPU Sedang)</option>
+                  <option value="8">8 Siswa (Server GPU Kuat)</option>
+                  <option value="10">10 Siswa (Maksimal)</option>
+                </select>
+                <p className="text-[11px] text-slate-400 mt-1">
+                  Membatasi komputasi AI serentak. Jika ada 100 siswa curhat bersamaan, sisa pesan otomatis masuk antrian cerdas (FIFO Queue) dan diproses bergantian tanpa server down.
+                </p>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">
+                  Indikator "Sedang Mengetik" (Typing Status WhatsApp)
+                </label>
+                <select
+                  value={settings.ENABLE_TYPING_STATUS || "true"}
+                  onChange={(e) =>
+                    setSettings({ ...settings, ENABLE_TYPING_STATUS: e.target.value })
+                  }
+                  className="w-full text-xs p-2 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                >
+                  <option value="true">Aktif (Kirim status mengetik saat AI meracik balasan)</option>
+                  <option value="false">Nonaktif</option>
+                </select>
+                <p className="text-[11px] text-slate-400 mt-1">
+                  Saat aktif, bot akan mengirim sinyal status <i>composing</i> agar di WhatsApp siswa muncul tulisan <i>"sedang mengetik..."</i>.
+                </p>
+              </div>
             </div>
+
 
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-2">
               <button

@@ -2,7 +2,8 @@
 import { NextResponse } from "next/server";
 import { sakuciBackend } from "@/lib/api-client";
 import { generateCounselingReply, evaluateTriage } from "@/lib/ollama";
-import { sendWhatsAppNotification } from "@/lib/whatsapp";
+import { sendWhatsAppNotification, sendWhatsAppTyping } from "@/lib/whatsapp";
+import { aiQueue, AIConcurrencyError } from "@/lib/queue";
 
 export const dynamic = "force-dynamic";
 
@@ -41,80 +42,111 @@ export async function POST(req: Request) {
 
     const student = session.student;
 
-    // 1. Simpan pesan siswa ke database via API
+    // 1. Simpan pesan siswa ke database via API segera agar tidak hilang
     await sakuciBackend.addMessage({
       sessionId: session.id,
       sender: "STUDENT",
       message: message.trim(),
     });
 
-    // 2. Evaluasi Triase (apakah Hijau, Kuning, atau Merah)
-    const triageResult = await evaluateTriage(
-      message.trim(),
-      (session.messages || []).map((m: any) => ({ sender: m.sender, message: m.message }))
-    );
-
-    // Prioritas triase: MERAH > KUNING > HIJAU
-    let newLevel = triageResult.level;
-    if (session.triageLevel === "MERAH") {
-      newLevel = "MERAH";
-    } else if (session.triageLevel === "KUNING" && triageResult.level === "HIJAU") {
-      newLevel = "KUNING";
+    // 2. Memicu sinyal "sedang mengetik" ke WhatsApp siswa secara asinkron
+    if (student?.phone) {
+      sendWhatsAppTyping(student.phone).catch(() => {});
     }
 
-    // 3. Generate respon AI dari Ollama qwen2.5:7b
-    const aiReply = await generateCounselingReply(
-      student?.name || "Siswa",
-      student?.class || "Siswa",
-      (session.messages || []).map((m: any) => ({ sender: m.sender, message: m.message })),
-      message.trim()
-    );
+    // 3. Eksekusi proses AI melalui antrian terkontrol (Concurrency Queue Limiter)
+    // Mencegah server crash / timeout jika puluhan siswa curhat bersamaan
+    const result = await aiQueue.run(session.id, async () => {
+      const historyContext = (session.messages || []).map((m: any) => ({
+        sender: m.sender,
+        message: m.message,
+      }));
 
-    // 4. Simpan balasan AI ke database via API
-    await sakuciBackend.addMessage({
-      sessionId: session.id,
-      sender: "AI",
-      message: aiReply,
-      triageFlag: newLevel,
-    });
+      // Eksekusi evaluasi triase dan generasi balasan konselor secara paralel (Promise.all)
+      // Memangkas waktu tunggu dari ~10 detik menjadi ~4-5 detik
+      const [triageResult, aiReply] = await Promise.all([
+        evaluateTriage(message.trim(), historyContext),
+        generateCounselingReply(
+          student?.name || "Siswa",
+          student?.class || "Siswa",
+          historyContext,
+          message.trim()
+        ),
+      ]);
 
-    // 5. Update data sesi (triage level, summary, reason)
-    const shouldNotify =
-      (newLevel === "MERAH" && !session.notifiedGuruBk) ||
-      (newLevel === "KUNING" && !session.notifiedGuruBk) ||
-      triageResult.urgent;
+      // Prioritas triase: MERAH > KUNING > HIJAU
+      let newLevel = triageResult.level;
+      if (session.triageLevel === "MERAH") {
+        newLevel = "MERAH";
+      } else if (session.triageLevel === "KUNING" && triageResult.level === "HIJAU") {
+        newLevel = "KUNING";
+      }
 
-    await sakuciBackend.updateSession(session.id, {
-      triageLevel: newLevel,
-      triageReason: triageResult.reason || session.triageReason,
-      summary: triageResult.summary || session.summary,
-      notifiedGuruBk: shouldNotify ? true : session.notifiedGuruBk,
-    });
-
-    // 6. Jika terdeteksi kondisi darurat / butuh notifikasi, kirim WA ke Guru BK secara asinkron
-    if (shouldNotify && student) {
-      sendWhatsAppNotification({
+      // Simpan balasan AI ke database via API
+      await sakuciBackend.addMessage({
         sessionId: session.id,
-        studentName: student.name,
-        studentClass: student.class,
-        studentNisn: student.nisn,
+        sender: "AI",
+        message: aiReply,
+        triageFlag: newLevel,
+      });
+
+      // Update data sesi (triage level, summary, reason)
+      const shouldNotify =
+        (newLevel === "MERAH" && !session.notifiedGuruBk) ||
+        (newLevel === "KUNING" && !session.notifiedGuruBk) ||
+        triageResult.urgent;
+
+      await sakuciBackend.updateSession(session.id, {
         triageLevel: newLevel,
+        triageReason: triageResult.reason || session.triageReason,
+        summary: triageResult.summary || session.summary,
+        notifiedGuruBk: shouldNotify ? true : session.notifiedGuruBk,
+      });
+
+      // Jika terdeteksi kondisi darurat / butuh notifikasi, kirim WA ke Guru BK secara asinkron
+      if (shouldNotify && student) {
+        sendWhatsAppNotification({
+          sessionId: session.id,
+          studentName: student.name,
+          studentClass: student.class,
+          studentNisn: student.nisn,
+          triageLevel: newLevel,
+          triageReason: triageResult.reason,
+          summary: triageResult.summary,
+          latestMessage: message.trim(),
+        }).catch((err) => console.error("Error triggering WA notification:", err));
+      }
+
+      return {
+        reply: aiReply,
+        triage: newLevel,
         triageReason: triageResult.reason,
-        summary: triageResult.summary,
-        latestMessage: message.trim(),
-      }).catch((err) => console.error("Error triggering WA notification:", err));
-    }
+        urgent: triageResult.urgent,
+      };
+    });
 
     return NextResponse.json({
       success: true,
-      reply: aiReply,
+      reply: result.reply,
       sessionId: session.id,
-      triage: newLevel,
-      triageReason: triageResult.reason,
-      urgent: triageResult.urgent,
+      triage: result.triage,
+      triageReason: result.triageReason,
+      urgent: result.urgent,
     });
   } catch (error: any) {
     console.error("Error in /api/bot/chat:", error);
+
+    // Tangani kondisi beban antrian server dan spam per sesi dengan respon ramah
+    if (error instanceof AIConcurrencyError) {
+      return NextResponse.json({
+        success: true,
+        reply: error.message,
+        sessionId: (await req.clone().json().catch(() => ({})))?.sessionId,
+        triage: "HIJAU",
+        isQueueNotice: true,
+      });
+    }
+
     return NextResponse.json(
       {
         success: false,
@@ -125,3 +157,4 @@ export async function POST(req: Request) {
     );
   }
 }
+

@@ -2,6 +2,7 @@
 import { NextResponse } from "next/server";
 import { sakuciBackend } from "@/lib/api-client";
 import { sendWhatsAppNotification } from "@/lib/whatsapp";
+import { aiQueue } from "@/lib/queue";
 
 export const dynamic = "force-dynamic";
 
@@ -17,6 +18,8 @@ export async function GET() {
       OLLAMA_BASE_URL: process.env.OLLAMA_BASE_URL || "https://ai.smksangkuriang1cimahi.sch.id",
       OLLAMA_MODEL: process.env.OLLAMA_MODEL || "qwen2.5:7b",
       SAKUCI_API_URL: process.env.SAKUCI_API_URL || "https://eks.smksangkuriang1cimahi.sch.id",
+      MAX_CONCURRENT_CHATS: process.env.MAX_CONCURRENT_CHATS || "4",
+      ENABLE_TYPING_STATUS: process.env.ENABLE_TYPING_STATUS || "true",
     };
 
     const mergedSettings = {
@@ -24,9 +27,15 @@ export async function GET() {
       ...(backendData?.settings || {}),
     };
 
+    // Update antrian runtime jika ada setting tersimpan
+    if (mergedSettings.MAX_CONCURRENT_CHATS) {
+      aiQueue.setMaxConcurrent(parseInt(mergedSettings.MAX_CONCURRENT_CHATS, 10));
+    }
+
     return NextResponse.json({
       success: true,
       settings: mergedSettings,
+      queueStats: aiQueue.getStats(),
       notificationLogs: backendData?.notificationLogs || [],
     });
   } catch (error: any) {
@@ -42,7 +51,10 @@ export async function GET() {
           OLLAMA_BASE_URL: process.env.OLLAMA_BASE_URL || "https://ai.smksangkuriang1cimahi.sch.id",
           OLLAMA_MODEL: process.env.OLLAMA_MODEL || "qwen2.5:7b",
           SAKUCI_API_URL: process.env.SAKUCI_API_URL || "https://eks.smksangkuriang1cimahi.sch.id",
+          MAX_CONCURRENT_CHATS: process.env.MAX_CONCURRENT_CHATS || "4",
+          ENABLE_TYPING_STATUS: process.env.ENABLE_TYPING_STATUS || "true",
         },
+        queueStats: aiQueue.getStats(),
         notificationLogs: [],
       }
     );
@@ -84,6 +96,13 @@ export async function POST(req: Request) {
       if (settings.NOTIF_ALERT_LEVEL) process.env.NOTIF_ALERT_LEVEL = settings.NOTIF_ALERT_LEVEL;
       if (settings.OLLAMA_BASE_URL) process.env.OLLAMA_BASE_URL = settings.OLLAMA_BASE_URL;
       if (settings.OLLAMA_MODEL) process.env.OLLAMA_MODEL = settings.OLLAMA_MODEL;
+      if (settings.MAX_CONCURRENT_CHATS) {
+        process.env.MAX_CONCURRENT_CHATS = settings.MAX_CONCURRENT_CHATS;
+        aiQueue.setMaxConcurrent(parseInt(settings.MAX_CONCURRENT_CHATS, 10));
+      }
+      if (settings.ENABLE_TYPING_STATUS) {
+        process.env.ENABLE_TYPING_STATUS = settings.ENABLE_TYPING_STATUS;
+      }
 
       return NextResponse.json({
         success: true,
@@ -103,4 +122,5 @@ export async function POST(req: Request) {
     );
   }
 }
+
 
