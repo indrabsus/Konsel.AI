@@ -1,0 +1,77 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Student {
+  id          String              @id @default(cuid())
+  nisn        String              @unique
+  username    String?
+  name        String
+  class       String
+  major       String?
+  password    String              // Password untuk login di WhatsApp Bot (bisa plaintext atau bcrypt hash dari Sakuci)
+  phone       String?             // Nomor WhatsApp Siswa
+  parentPhone String?             // Nomor WhatsApp Orang Tua
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+  sessions    CounselingSession[]
+}
+
+model CounselingSession {
+  id              String        @id @default(cuid())
+  studentId       String
+  student         Student       @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  status          String        @default("ACTIVE") // ACTIVE, CLOSED
+  triageLevel     String        @default("HIJAU")  // HIJAU, KUNING, MERAH
+  triageReason    String?       @db.Text
+  counselorNotes  String?       @db.Text           // Catatan tindak lanjut Guru BK
+  handlingStatus  String        @default("MENUNGGU") // MENUNGGU, PROSES, SELESAI
+  summary         String?       @db.Text           // Ringkasan otomatis masalah dari AI
+  notifiedGuruBk  Boolean       @default(false)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  messages        ChatMessage[]
+}
+
+model ChatMessage {
+  id         String            @id @default(cuid())
+  sessionId  String
+  session    CounselingSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  sender     String            // STUDENT atau AI atau COUNSELOR
+  message    String            @db.Text
+  triageFlag String?           // Indikasi triase pada pesan ini jika ada
+  createdAt  DateTime          @default(now())
+}
+
+model NotificationLog {
+  id        String   @id @default(cuid())
+  sessionId String?
+  recipient String
+  message   String   @db.Text
+  status    String   @default("SENT") // SENT, FAILED
+  response  String?  @db.Text
+  createdAt DateTime @default(now())
+}
+
+model AdminUser {
+  id        String   @id @default(cuid())
+  username  String   @unique
+  name      String
+  password  String
+  role      String   @default("GURU_BK")
+  createdAt DateTime @default(now())
+}
+
+model SystemSetting {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  value       String   @db.Text
+  description String?  @db.Text
+  updatedAt   DateTime @updatedAt
+}
+
