@@ -1,7 +1,6 @@
 // src/app/api/bot/auth/route.ts
 import { NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
-import bcrypt from "bcryptjs";
+import { sakuciBackend } from "@/lib/api-client";
 
 export const dynamic = "force-dynamic";
 
@@ -23,133 +22,50 @@ export async function POST(req: Request) {
     const inputUser = String(username).trim();
     const inputPass = String(password).trim();
 
-    // 1. Coba verifikasi langsung ke API Sakuci Express
-    let sakuciAuthSuccess = false;
-    let sakuciData: any = null;
-
+    // 1. Verifikasi kredensial langsung ke API Sakuci Express
     const sakuciBaseUrl = (process.env.SAKUCI_API_URL || "https://eks.smksangkuriang1cimahi.sch.id").replace(/\/$/, "");
 
+    let sakuciRes;
     try {
-      const sakuciRes = await fetch(`${sakuciBaseUrl}/api/auth/login`, {
+      sakuciRes = await fetch(`${sakuciBaseUrl}/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username: inputUser, password: inputPass }),
       });
-
-      if (sakuciRes.ok) {
-        const sakuciJson = await sakuciRes.json();
-        if (sakuciJson.status === 200) {
-          sakuciAuthSuccess = true;
-          sakuciData = sakuciJson.data;
-        }
-      }
-    } catch (apiErr) {
-      console.warn("Gagal menghubungi API Sakuci Express, fallback ke database lokal:", apiErr);
-    }
-
-    // Cari siswa di database lokal Konsel.AI
-    let student = await prisma.student.findFirst({
-      where: {
-        OR: [
-          { username: inputUser },
-          { nisn: inputUser },
-        ],
-      },
-    });
-
-    if (sakuciAuthSuccess) {
-      // Jika berhasil login via Sakuci Express tapi belum ada di DB lokal, buat record siswa
-      if (!student) {
-        student = await prisma.student.create({
-          data: {
-            username: inputUser,
-            nisn: inputUser,
-            name: sakuciData?.username || inputUser,
-            class: "Siswa Sakuci",
-            password: inputPass,
-            phone: phone ? String(phone).trim() : null,
-          },
-        });
-      }
-    } else {
-      // Jika API Sakuci tidak berhasil (atau gagal koneksi), gunakan verifikasi DB lokal
-      if (!student) {
-        return NextResponse.json(
-          {
-            success: false,
-            message:
-              `❌ Akun dengan username "${inputUser}" tidak ditemukan. Pastikan username dan kata sandi sesuai dengan akun Sakuci kamu.`,
-          },
-          { status: 401 }
-        );
-      }
-
-      // Validasi Password di database lokal
-      let isPasswordValid = false;
-      const dbPassword = String(student.password || "");
-
-      if (
-        dbPassword.startsWith("$2y$") ||
-        dbPassword.startsWith("$2a$") ||
-        dbPassword.startsWith("$2b$")
-      ) {
-        const normalizedHash = dbPassword.replace("$2y$", "$2a$");
-        try {
-          isPasswordValid = bcrypt.compareSync(inputPass, normalizedHash);
-        } catch (e) {
-          isPasswordValid = false;
-        }
-      } else {
-        isPasswordValid = dbPassword === inputPass;
-      }
-
-      // Fallback toleransi jika siswa mengetik default
-      if (!isPasswordValid && (inputPass === "siswa123" || inputPass === "123456")) {
-        isPasswordValid = true;
-      }
-
-      if (!isPasswordValid) {
-        return NextResponse.json(
-          {
-            success: false,
-            message:
-              "❌ Kata sandi tidak cocok. Masukkan kata sandi akun portal Sakuci kamu atau hubungi Guru BK jika lupa kata sandi.",
-          },
-          { status: 401 }
-        );
-      }
-    }
-
-    // Jika nomor WA dikirimkan dan belum tersimpan, update nomor WA siswa
-    if (phone && (!student.phone || student.phone !== phone)) {
-      await prisma.student.update({
-        where: { id: student.id },
-        data: { phone: String(phone).trim() },
-      });
-    }
-
-    // Cari apakah ada sesi konseling yang masih aktif hari ini
-    let session = await prisma.counselingSession.findFirst({
-      where: {
-        studentId: student.id,
-        status: "ACTIVE",
-      },
-      orderBy: { createdAt: "desc" },
-    });
-
-    let isNewSession = false;
-    if (!session) {
-      // Buat sesi baru
-      session = await prisma.counselingSession.create({
-        data: {
-          studentId: student.id,
-          status: "ACTIVE",
-          triageLevel: "HIJAU",
-          handlingStatus: "MENUNGGU",
+    } catch (networkErr: any) {
+      console.error("Gagal menghubungi API Sakuci Express:", networkErr);
+      return NextResponse.json(
+        {
+          success: false,
+          message: "Gagal terhubung ke server autentikasi Sakuci Express. Coba lagi beberapa saat lagi.",
         },
-      });
-      isNewSession = true;
+        { status: 502 }
+      );
     }
+
+    const sakuciJson = await sakuciRes.json().catch(() => ({}));
+
+    // Cek respon Sakuci Express (bisa user/siswa atau fallback password default jika disetel)
+    const isSakuciOk = sakuciRes.ok && sakuciJson.status === 200;
+    const isFallbackOk = inputPass === "123456" || inputPass === "siswa123";
+
+    if (!isSakuciOk && !isFallbackOk) {
+      return NextResponse.json(
+        {
+          success: false,
+          message: sakuciJson.message || "❌ Kata sandi tidak cocok. Masukkan kata sandi akun portal Sakuci kamu.",
+        },
+        { status: 401 }
+      );
+    }
+
+    // 2. Ambil data siswa & sesi aktif melalui Sakuci Backend API
+    const botData = await sakuciBackend.findStudentForBot({
+      username: inputUser,
+      phone: phone ? String(phone).trim() : undefined,
+    });
+
+    const { student, session, isNewSession } = botData;
 
     return NextResponse.json({
       success: true,
@@ -169,9 +85,10 @@ export async function POST(req: Request) {
     return NextResponse.json(
       {
         success: false,
-        message: "Terjadi kesalahan internal server saat memproses login.",
+        message: error?.message || "Terjadi kesalahan internal server saat memproses login.",
       },
       { status: 500 }
     );
   }
 }
+

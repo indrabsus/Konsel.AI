@@ -1,5 +1,5 @@
 // src/lib/whatsapp.ts
-import prisma from "./prisma";
+import { sakuciBackend } from "./api-client";
 
 interface SendNotificationParams {
   sessionId?: string;
@@ -19,25 +19,12 @@ export async function sendWhatsAppNotification(params: SendNotificationParams): 
   details?: any;
 }> {
   try {
-    // 1. Ambil setting dari database atau fallback ke environment variables
-    const settings = await prisma.systemSetting.findMany({
-      where: {
-        key: {
-          in: ["WA_GATEWAY_URL", "WA_GATEWAY_TOKEN", "WA_GURU_BK_NUMBER", "NOTIF_ALERT_LEVEL"],
-        },
-      },
-    });
-
-    const configMap = new Map(settings.map((s) => [s.key, s.value]));
-
     const gatewayUrl =
-      configMap.get("WA_GATEWAY_URL") ||
       process.env.WA_GATEWAY_URL ||
-      "https://api.fonnte.com/send";
-    const token = configMap.get("WA_GATEWAY_TOKEN") || process.env.WA_GATEWAY_TOKEN || "";
-    const targetNumber =
-      configMap.get("WA_GURU_BK_NUMBER") || process.env.WA_GURU_BK_NUMBER || "";
-    const alertLevel = configMap.get("NOTIF_ALERT_LEVEL") || "ALL"; // ALL, KUNING_MERAH, MERAH_ONLY
+      "https://bot.smksangkuriang1cimahi.sch.id/wa/kirim";
+    const token = process.env.WA_GATEWAY_TOKEN || "";
+    const targetNumber = process.env.WA_GURU_BK_NUMBER || "081234567890";
+    const alertLevel = process.env.NOTIF_ALERT_LEVEL || "ALL"; // ALL, KUNING_MERAH, MERAH_ONLY
 
     // Cek apakah tingkat triase memenuhi syarat pengiriman notifikasi
     if (alertLevel === "MERAH_ONLY" && params.triageLevel !== "MERAH") {
@@ -158,16 +145,14 @@ Ringkasan: ${params.summary || "Curhat atau obrolan harian santai."}`;
       console.error("Gagal mengirim notifikasi WA ke gateway:", err);
     }
 
-    // 4. Catat riwayat notifikasi ke database
-    await prisma.notificationLog.create({
-      data: {
-        sessionId: params.sessionId,
-        recipient: targetNumber,
-        message: messageText,
-        status: apiStatus,
-        response: apiResponse,
-      },
-    });
+    // 4. Catat riwayat notifikasi ke database via API Sakuci Express
+    await sakuciBackend.saveNotificationLog({
+      sessionId: params.sessionId,
+      recipient: targetNumber,
+      message: messageText,
+      status: apiStatus,
+      response: apiResponse,
+    }).catch((err) => console.warn("Gagal simpan notification log:", err));
 
     return {
       success: apiStatus === "SENT" || apiStatus === "SIMULATED",

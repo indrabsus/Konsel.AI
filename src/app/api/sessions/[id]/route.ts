@@ -1,6 +1,8 @@
 // src/app/api/sessions/[id]/route.ts
 import { NextResponse } from "next/server";
-import prisma from "@/lib/prisma";
+import { sakuciBackend } from "@/lib/api-client";
+
+export const dynamic = "force-dynamic";
 
 export async function GET(
   req: Request,
@@ -8,28 +10,12 @@ export async function GET(
 ) {
   try {
     const { id } = params;
-    const session = await prisma.counselingSession.findUnique({
-      where: { id },
-      include: {
-        student: true,
-        messages: {
-          orderBy: { createdAt: "asc" },
-        },
-      },
-    });
-
-    if (!session) {
-      return NextResponse.json(
-        { success: false, message: "Sesi konseling tidak ditemukan." },
-        { status: 404 }
-      );
-    }
-
-    return NextResponse.json({ success: true, session });
+    const data = await sakuciBackend.getSessionDetail(id);
+    return NextResponse.json(data);
   } catch (error: any) {
     console.error("Error in GET /api/sessions/[id]:", error);
     return NextResponse.json(
-      { success: false, message: "Gagal memuat detail sesi." },
+      { success: false, message: error?.message || "Gagal memuat detail sesi." },
       { status: 500 }
     );
   }
@@ -50,45 +36,18 @@ export async function PATCH(
     if (triageLevel !== undefined) dataToUpdate.triageLevel = triageLevel;
     if (status !== undefined) dataToUpdate.status = status;
 
-    const updated = await prisma.counselingSession.update({
-      where: { id },
-      data: dataToUpdate,
-      include: { student: true },
-    });
+    await sakuciBackend.updateSession(id, dataToUpdate);
 
     return NextResponse.json({
       success: true,
       message: "Data penanganan Guru BK berhasil disimpan.",
-      session: updated,
     });
   } catch (error: any) {
     console.error("Error in PATCH /api/sessions/[id]:", error);
     return NextResponse.json(
-      { success: false, message: "Gagal memperbarui data penanganan." },
+      { success: false, message: error?.message || "Gagal memperbarui data penanganan." },
       { status: 500 }
     );
   }
 }
 
-export async function DELETE(
-  req: Request,
-  { params }: { params: { id: string } }
-) {
-  try {
-    const { id } = params;
-    await prisma.counselingSession.delete({
-      where: { id },
-    });
-
-    return NextResponse.json({
-      success: true,
-      message: "Sesi konseling berhasil dihapus.",
-    });
-  } catch (error: any) {
-    console.error("Error in DELETE /api/sessions/[id]:", error);
-    return NextResponse.json(
-      { success: false, message: "Gagal menghapus sesi." },
-      { status: 500 }
-    );
-  }
-}
