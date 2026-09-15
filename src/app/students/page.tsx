@@ -15,11 +15,23 @@ import {
   GraduationCap,
 } from "lucide-react";
 
+const ALL_ACTIVE_CLASSES = [
+  "AK 1", "AK 2", "AKL 1", "AKL 2",
+  "BDP 1", "BDP 2", "BR 1", "BR 2", "BR 3",
+  "MPLB 1", "MPLB 2", "MPLB 3", "MPLB 4",
+  "PM 1", "PM 2", "PM 3",
+  "PPLG 1", "PPLG 2", "PPLG 3", "PPLG 4"
+];
+
 export default function StudentsPage() {
   const [students, setStudents] = useState<any[]>([]);
+  const [totalCount, setTotalCount] = useState<number>(0);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [classFilter, setClassFilter] = useState("ALL");
+  const [pageSize, setPageSize] = useState<number>(0); // 0 = Semua siswa aktif
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [totalPages, setTotalPages] = useState<number>(1);
   const [resettingId, setResettingId] = useState<string | null>(null);
 
   // Modal State
@@ -37,17 +49,31 @@ export default function StudentsPage() {
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
 
-  const fetchStudents = async () => {
+  const fetchStudents = async (
+    page = currentPage,
+    limit = pageSize,
+    searchVal = search,
+    cls = classFilter
+  ) => {
     try {
       setLoading(true);
       const params = new URLSearchParams();
-      if (search) params.append("search", search);
-      if (classFilter !== "ALL") params.append("class", classFilter);
+      if (searchVal.trim()) params.append("search", searchVal.trim());
+      if (cls !== "ALL") params.append("class", cls);
+      if (page) params.append("page", String(page));
+      params.append("limit", String(limit));
 
       const res = await fetch(`/api/students?${params.toString()}`);
       const data = await res.json();
       if (data.success) {
         setStudents(data.students || []);
+        if (data.pagination) {
+          setTotalCount(data.pagination.total);
+          setTotalPages(data.pagination.totalPages || 1);
+          setCurrentPage(data.pagination.page || 1);
+        } else {
+          setTotalCount((data.students || []).length);
+        }
       }
     } catch (err) {
       console.error("Error fetching students:", err);
@@ -57,8 +83,20 @@ export default function StudentsPage() {
   };
 
   useEffect(() => {
-    fetchStudents();
+    fetchStudents(1, pageSize, search, classFilter);
   }, [classFilter]);
+
+  const handleSearchSubmit = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    setCurrentPage(1);
+    fetchStudents(1, pageSize, search, classFilter);
+  };
+
+  const handlePageSizeChange = (newLimit: number) => {
+    setPageSize(newLimit);
+    setCurrentPage(1);
+    fetchStudents(1, newLimit, search, classFilter);
+  };
 
   const handleOpenAdd = () => {
     setEditingStudent(null);
@@ -168,9 +206,6 @@ export default function StudentsPage() {
     }
   };
 
-  // Distinct classes for filter
-  const classesList = Array.from(new Set(students.map((s) => s.class))).filter(Boolean);
-
   const [syncing, setSyncing] = useState(false);
 
   const handleSyncSakuci = async () => {
@@ -182,7 +217,7 @@ export default function StudentsPage() {
       if (data.success) {
         setSuccessMessage(`✅ Berhasil menyinkronkan ${data.synced} siswa dari server Sakuci!`);
         setTimeout(() => setSuccessMessage(""), 5000);
-        fetchStudents();
+        fetchStudents(1, pageSize, search, classFilter);
       } else {
         setErrorMessage(data.message || "Gagal sinkronisasi data dari server Sakuci.");
       }
@@ -201,11 +236,11 @@ export default function StudentsPage() {
           <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-2.5">
             Manajemen Akun Siswa & Kredensial WA
             <span className="text-xs font-semibold px-2.5 py-1 bg-emerald-100 text-emerald-800 rounded-full">
-              {students.length} Siswa Terdaftar
+              {totalCount > 0 ? totalCount.toLocaleString("id-ID") : students.length} Siswa Aktif Terdaftar
             </span>
           </h1>
           <p className="text-sm text-slate-500 mt-1">
-            Daftar siswa yang berhak mengakses Konsel.AI di WhatsApp. Data tersinkron dengan server Sakuci.
+            Daftar seluruh siswa aktif yang berhak mengakses Konsel.AI di WhatsApp. Terhubung langsung secara real-time ke sistem Sakuci.
           </p>
         </div>
 
@@ -220,7 +255,7 @@ export default function StudentsPage() {
             {syncing ? "Menyinkronkan..." : "Tarik Data Sakuci"}
           </button>
           <button
-            onClick={fetchStudents}
+            onClick={() => fetchStudents(currentPage, pageSize, search, classFilter)}
             className="flex items-center gap-2 px-3.5 py-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded-lg shadow-sm transition"
           >
             <RefreshCw className="w-3.5 h-3.5" />
@@ -244,41 +279,59 @@ export default function StudentsPage() {
 
       {/* Filter and Search Bar */}
       <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
+        <form onSubmit={handleSearchSubmit} className="flex items-center gap-2">
           <div className="relative w-72">
             <input
               type="text"
               placeholder="Cari nama, Username, atau No WA..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && fetchStudents()}
               className="w-full pl-9 pr-4 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white"
             />
             <Search className="w-4 h-4 text-slate-400 absolute left-2.5 top-2" />
           </div>
 
           <button
-            onClick={fetchStudents}
+            type="submit"
             className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-medium rounded-lg transition"
           >
             Cari
           </button>
-        </div>
+        </form>
 
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-slate-500 font-medium">Filter Kelas:</span>
-          <select
-            value={classFilter}
-            onChange={(e) => setClassFilter(e.target.value)}
-            className="text-xs p-1.5 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
-          >
-            <option value="ALL">Semua Kelas</option>
-            {classesList.map((c) => (
-              <option key={c} value={c}>
-                {c}
-              </option>
-            ))}
-          </select>
+        <div className="flex flex-wrap items-center gap-4">
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-slate-500 font-medium">Filter Kelas:</span>
+            <select
+              value={classFilter}
+              onChange={(e) => {
+                setClassFilter(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="text-xs p-1.5 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium text-slate-700"
+            >
+              <option value="ALL">Semua Kelas ({totalCount > 0 ? totalCount.toLocaleString("id-ID") : "1.219"})</option>
+              {ALL_ACTIVE_CLASSES.map((c) => (
+                <option key={c} value={c}>
+                  Kelas {c}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-slate-500 font-medium">Tampilkan:</span>
+            <select
+              value={pageSize}
+              onChange={(e) => handlePageSizeChange(Number(e.target.value))}
+              className="text-xs p-1.5 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium text-slate-700"
+            >
+              <option value={0}>Semua Siswa ({totalCount > 0 ? totalCount.toLocaleString("id-ID") : "1.219"})</option>
+              <option value={50}>50 per halaman</option>
+              <option value={100}>100 per halaman</option>
+              <option value={250}>250 per halaman</option>
+            </select>
+          </div>
         </div>
       </div>
 
@@ -298,7 +351,14 @@ export default function StudentsPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {students.length === 0 ? (
+              {loading ? (
+                <tr>
+                  <td colSpan={7} className="p-12 text-center text-slate-500">
+                    <RefreshCw className="w-5 h-5 animate-spin mx-auto text-indigo-600 mb-2" />
+                    Memuat seluruh data siswa aktif dari server Sakuci...
+                  </td>
+                </tr>
+              ) : students.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="p-8 text-center text-slate-400">
                     Tidak ada data siswa ditemukan.
@@ -389,6 +449,47 @@ export default function StudentsPage() {
           </table>
         </div>
       </div>
+
+      {/* Pagination Controls */}
+      {pageSize > 0 && totalPages > 1 && (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-4 rounded-xl border border-slate-200 shadow-sm text-xs text-slate-600">
+          <div>
+            Menampilkan halaman <span className="font-bold text-slate-900">{currentPage}</span> dari{" "}
+            <span className="font-bold text-slate-900">{totalPages}</span> ({totalCount.toLocaleString("id-ID")} total siswa aktif)
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => {
+                if (currentPage > 1) {
+                  const p = currentPage - 1;
+                  setCurrentPage(p);
+                  fetchStudents(p, pageSize, search, classFilter);
+                }
+              }}
+              disabled={currentPage <= 1 || loading}
+              className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-lg transition disabled:opacity-40"
+            >
+              ← Sebelumnya
+            </button>
+            <span className="px-2 font-bold text-indigo-600">
+              {currentPage} / {totalPages}
+            </span>
+            <button
+              onClick={() => {
+                if (currentPage < totalPages) {
+                  const p = currentPage + 1;
+                  setCurrentPage(p);
+                  fetchStudents(p, pageSize, search, classFilter);
+                }
+              }}
+              disabled={currentPage >= totalPages || loading}
+              className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-lg transition disabled:opacity-40"
+            >
+              Berikutnya →
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Modal Tambah / Edit Siswa */}
       {isModalOpen && (

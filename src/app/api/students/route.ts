@@ -8,10 +8,12 @@ export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
     const search = searchParams.get("search") || "";
-    const page = Number(searchParams.get("page") || "1");
-    const limit = Number(searchParams.get("limit") || "100");
+    const page = searchParams.get("page") ? Number(searchParams.get("page")) : 1;
+    // Default limit 0 (tanpa batasan, ambil seluruh siswa aktif) jika tidak dispesifikasikan
+    const limit = searchParams.get("limit") !== null ? Number(searchParams.get("limit")) : 0;
+    const classFilter = searchParams.get("class") || "";
 
-    const data = await sakuciBackend.getStudents({ search, page, limit });
+    const data = await sakuciBackend.getStudents({ search, page, limit, class: classFilter });
     return NextResponse.json(data);
   } catch (error: any) {
     console.error("Error in GET /api/students:", error);
