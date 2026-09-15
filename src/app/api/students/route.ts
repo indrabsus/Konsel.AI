@@ -12,8 +12,15 @@ export async function GET(req: Request) {
     // Default limit 0 (tanpa batasan, ambil seluruh siswa aktif) jika tidak dispesifikasikan
     const limit = searchParams.get("limit") !== null ? Number(searchParams.get("limit")) : 0;
     const classFilter = searchParams.get("class") || "";
+    const majorFilter = searchParams.get("major") || "";
 
-    const data = await sakuciBackend.getStudents({ search, page, limit, class: classFilter });
+    const data = await sakuciBackend.getStudents({
+      search,
+      page,
+      limit,
+      class: classFilter,
+      major: majorFilter,
+    });
     return NextResponse.json(data);
   } catch (error: any) {
     console.error("Error in GET /api/students:", error);

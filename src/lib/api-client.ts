@@ -106,12 +106,19 @@ export const sakuciBackend = {
   },
 
   // Students
-  async getStudents(params: { search?: string; page?: number; limit?: number; class?: string } = {}) {
+  async getStudents(params: {
+    search?: string;
+    page?: number;
+    limit?: number;
+    class?: string;
+    major?: string;
+  } = {}) {
     const query = new URLSearchParams();
     if (params.search) query.set("search", params.search);
     if (params.page) query.set("page", String(params.page));
     if (params.limit !== undefined) query.set("limit", String(params.limit));
     if (params.class && params.class !== "ALL") query.set("class", params.class);
+    if (params.major && params.major !== "ALL") query.set("major", params.major);
 
     const qs = query.toString();
     return sakuciFetch<{

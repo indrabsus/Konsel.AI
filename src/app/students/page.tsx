@@ -16,11 +16,28 @@ import {
 } from "lucide-react";
 
 const ALL_ACTIVE_CLASSES = [
-  "AK 1", "AK 2", "AKL 1", "AKL 2",
-  "BDP 1", "BDP 2", "BR 1", "BR 2", "BR 3",
-  "MPLB 1", "MPLB 2", "MPLB 3", "MPLB 4",
-  "PM 1", "PM 2", "PM 3",
-  "PPLG 1", "PPLG 2", "PPLG 3", "PPLG 4"
+  // Tingkat 10 (X)
+  "X AKL 1", "X AKL 2",
+  "X MPLB 1", "X MPLB 2", "X MPLB 3",
+  "X PM 1", "X PM 2", "X PM 3",
+  "X PPLG 1", "X PPLG 2", "X PPLG 3",
+  // Tingkat 11 (XI)
+  "XI AK 1", "XI AK 2",
+  "XI BR 1", "XI BR 2", "XI BR 3",
+  "XI MPLB 1", "XI MPLB 2", "XI MPLB 3", "XI MPLB 4",
+  "XI PPLG 1", "XI PPLG 2", "XI PPLG 3", "XI PPLG 4",
+  // Tingkat 12 (XII)
+  "XII AKL 1", "XII AKL 2",
+  "XII BDP 1", "XII BDP 2",
+  "XII MPLB 1", "XII MPLB 2", "XII MPLB 3", "XII MPLB 4",
+  "XII PPLG 1", "XII PPLG 2", "XII PPLG 3", "XII PPLG 4",
+];
+
+const ALL_MAJORS = [
+  { kode: "PPLG", nama: "Pengembangan Perangkat Lunak dan Gim (PPLG)" },
+  { kode: "MPLB", nama: "Manajemen Perkantoran dan Layanan Bisnis (MPLB)" },
+  { kode: "PM", nama: "Pemasaran (PM / BR / BDP)" },
+  { kode: "AKL", nama: "Akuntansi dan Keuangan Lembaga (AKL / AK)" },
 ];
 
 export default function StudentsPage() {
@@ -29,10 +46,20 @@ export default function StudentsPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [classFilter, setClassFilter] = useState("ALL");
+  const [majorFilter, setMajorFilter] = useState("ALL");
   const [pageSize, setPageSize] = useState<number>(0); // 0 = Semua siswa aktif
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [totalPages, setTotalPages] = useState<number>(1);
   const [resettingId, setResettingId] = useState<string | null>(null);
+
+  const availableClasses = ALL_ACTIVE_CLASSES.filter((c) => {
+    if (majorFilter === "ALL") return true;
+    if (majorFilter === "PPLG") return c.includes("PPLG") || c.includes("RPL");
+    if (majorFilter === "MPLB") return c.includes("MPLB");
+    if (majorFilter === "PM") return c.includes("PM") || c.includes("BR") || c.includes("BDP");
+    if (majorFilter === "AKL") return c.includes("AKL") || c.includes("AK ");
+    return true;
+  });
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -53,13 +80,15 @@ export default function StudentsPage() {
     page = currentPage,
     limit = pageSize,
     searchVal = search,
-    cls = classFilter
+    cls = classFilter,
+    mjr = majorFilter
   ) => {
     try {
       setLoading(true);
       const params = new URLSearchParams();
       if (searchVal.trim()) params.append("search", searchVal.trim());
       if (cls !== "ALL") params.append("class", cls);
+      if (mjr !== "ALL") params.append("major", mjr);
       if (page) params.append("page", String(page));
       params.append("limit", String(limit));
 
@@ -83,19 +112,19 @@ export default function StudentsPage() {
   };
 
   useEffect(() => {
-    fetchStudents(1, pageSize, search, classFilter);
-  }, [classFilter]);
+    fetchStudents(1, pageSize, search, classFilter, majorFilter);
+  }, [classFilter, majorFilter]);
 
   const handleSearchSubmit = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     setCurrentPage(1);
-    fetchStudents(1, pageSize, search, classFilter);
+    fetchStudents(1, pageSize, search, classFilter, majorFilter);
   };
 
   const handlePageSizeChange = (newLimit: number) => {
     setPageSize(newLimit);
     setCurrentPage(1);
-    fetchStudents(1, newLimit, search, classFilter);
+    fetchStudents(1, newLimit, search, classFilter, majorFilter);
   };
 
   const handleOpenAdd = () => {
@@ -299,7 +328,27 @@ export default function StudentsPage() {
           </button>
         </form>
 
-        <div className="flex flex-wrap items-center gap-4">
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-slate-500 font-medium">Filter Jurusan:</span>
+            <select
+              value={majorFilter}
+              onChange={(e) => {
+                setMajorFilter(e.target.value);
+                setClassFilter("ALL");
+                setCurrentPage(1);
+              }}
+              className="text-xs p-1.5 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium text-slate-700"
+            >
+              <option value="ALL">Semua Jurusan</option>
+              {ALL_MAJORS.map((m) => (
+                <option key={m.kode} value={m.kode}>
+                  {m.nama}
+                </option>
+              ))}
+            </select>
+          </div>
+
           <div className="flex items-center gap-2">
             <span className="text-xs text-slate-500 font-medium">Filter Kelas:</span>
             <select
@@ -308,10 +357,14 @@ export default function StudentsPage() {
                 setClassFilter(e.target.value);
                 setCurrentPage(1);
               }}
-              className="text-xs p-1.5 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium text-slate-700"
+              className="text-xs p-1.5 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 font-medium text-slate-700 max-w-[180px]"
             >
-              <option value="ALL">Semua Kelas ({totalCount > 0 ? totalCount.toLocaleString("id-ID") : "1.219"})</option>
-              {ALL_ACTIVE_CLASSES.map((c) => (
+              <option value="ALL">
+                {majorFilter === "ALL"
+                  ? `Semua Kelas (${totalCount > 0 ? totalCount.toLocaleString("id-ID") : "1.219"})`
+                  : "Semua Kelas di Jurusan Ini"}
+              </option>
+              {availableClasses.map((c) => (
                 <option key={c} value={c}>
                   Kelas {c}
                 </option>
@@ -375,9 +428,13 @@ export default function StudentsPage() {
                         <div className="font-bold text-slate-900">{stu.name}</div>
                       </td>
                       <td className="p-4">
-                        <span className="font-semibold text-slate-700">{stu.class}</span>
+                        <span className="inline-flex items-center font-semibold text-indigo-700 bg-indigo-50 border border-indigo-100 px-2 py-0.5 rounded text-[11px]">
+                          {stu.class || "-"}
+                        </span>
                         {stu.major && (
-                          <div className="text-[11px] text-slate-400 truncate">{stu.major}</div>
+                          <div className="text-[11px] text-slate-500 mt-1 font-medium truncate max-w-[220px]" title={stu.major}>
+                            {stu.major}
+                          </div>
                         )}
                       </td>
                       <td className="p-4 font-mono">
