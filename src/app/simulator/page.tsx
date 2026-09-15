@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
+import Image from "next/image";
 import {
   Bot,
   Send,
@@ -248,8 +249,14 @@ export default function SimulatorPage() {
           {/* Mock WhatsApp Header */}
           <div className="bg-[#075e54] text-white p-4 flex items-center justify-between shadow-md">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center font-bold text-white text-base">
-                <Bot className="w-6 h-6 text-white" />
+              <div className="w-10 h-10 rounded-full bg-white p-1 flex items-center justify-center shrink-0 shadow overflow-hidden">
+                <Image
+                  src="/logo.png"
+                  alt="Avatar Bot Konsel.AI"
+                  width={36}
+                  height={36}
+                  className="w-8 h-8 object-contain"
+                />
               </div>
               <div>
                 <h3 className="text-sm font-bold flex items-center gap-2">

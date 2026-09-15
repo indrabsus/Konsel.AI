@@ -9,6 +9,11 @@ export const metadata: Metadata = {
   title: "Konsel.AI - Portal Guru BK SMK Sangkuriang 1 Cimahi",
   description:
     "Sistem Pemantauan Konseling AI, Triase Masalah Siswa (Hijau, Kuning, Merah), dan Notifikasi WhatsApp Otomatis.",
+  icons: {
+    icon: "/logo.png",
+    shortcut: "/logo.png",
+    apple: "/logo.png",
+  },
 };
 
 export default function RootLayout({

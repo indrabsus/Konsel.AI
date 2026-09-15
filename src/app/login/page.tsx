@@ -2,7 +2,8 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ShieldCheck, Lock, User, AlertCircle, ArrowRight, Loader2, School } from "lucide-react";
+import Image from "next/image";
+import { Lock, User, AlertCircle, ArrowRight, Loader2, School } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -64,8 +65,15 @@ export default function LoginPage() {
       <div className="w-full max-w-md bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 p-8 sm:p-10 relative z-10">
         {/* Header Branding */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-tr from-indigo-600 to-indigo-500 text-white shadow-lg shadow-indigo-500/30 mb-4">
-            <ShieldCheck className="w-8 h-8" />
+          <div className="inline-flex items-center justify-center mb-3">
+            <Image
+              src="/logo.png"
+              alt="Logo SMK Sangkuriang 1 Cimahi"
+              width={72}
+              height={72}
+              className="w-16 h-16 sm:w-20 sm:h-20 object-contain drop-shadow-md"
+              priority
+            />
           </div>
           <div className="flex items-center justify-center gap-1.5 text-xs font-semibold text-indigo-600 uppercase tracking-wider mb-1">
             <School className="w-3.5 h-3.5" />
@@ -77,14 +85,6 @@ export default function LoginPage() {
           <p className="text-slate-500 text-xs sm:text-sm mt-1.5">
             Sistem Pemantauan Konseling & Triase AI Siswa
           </p>
-        </div>
-
-        {/* Security Notice */}
-        <div className="mb-6 p-3 bg-indigo-50/80 border border-indigo-100 rounded-xl flex items-start gap-2.5 text-xs text-indigo-900">
-          <Lock className="w-4 h-4 text-indigo-600 shrink-0 mt-0.5" />
-          <div>
-            <span className="font-semibold">Akses Terbatas:</span> Hanya akun dengan username <code className="bg-indigo-200/60 text-indigo-900 px-1 py-0.5 rounded font-mono font-bold">admin</code> yang terverifikasi di server Sakuci Express yang dapat masuk.
-          </div>
         </div>
 
         {/* Error Notification */}
@@ -158,13 +158,6 @@ export default function LoginPage() {
             )}
           </button>
         </form>
-
-        {/* Footer info */}
-        <div className="mt-8 pt-6 border-t border-slate-100 text-center">
-          <p className="text-[11px] text-slate-400">
-            Terhubung ke API <span className="font-mono text-slate-600 font-semibold">eks.smksangkuriang1cimahi.sch.id</span>
-          </p>
-        </div>
       </div>
     </div>
   );
