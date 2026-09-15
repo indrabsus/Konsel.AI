@@ -12,6 +12,7 @@ import {
   Sparkles,
   School,
   ExternalLink,
+  LogOut,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -49,7 +50,7 @@ const NAV_ITEMS = [
   },
 ];
 
-export default function Sidebar() {
+export default function Sidebar({ onLogout }: { onLogout?: () => void }) {
   const pathname = usePathname();
 
   return (
@@ -153,15 +154,27 @@ export default function Sidebar() {
           </span>
         </div>
 
-        {/* User profile */}
-        <div className="flex items-center gap-2.5 pt-1">
-          <div className="w-8 h-8 rounded-full bg-indigo-700 flex items-center justify-center text-white font-bold text-xs">
-            BK
+        {/* User profile & Logout */}
+        <div className="flex items-center justify-between pt-1">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="w-8 h-8 rounded-full bg-indigo-700 flex items-center justify-center text-white font-bold text-xs">
+              AD
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-xs font-semibold text-slate-200 truncate">Administrator</p>
+              <p className="text-[11px] text-indigo-400 truncate font-mono">admin</p>
+            </div>
           </div>
-          <div className="min-w-0 flex-1">
-            <p className="text-xs font-semibold text-slate-200 truncate">Ibu Rahmawati, S.Pd.</p>
-            <p className="text-[11px] text-slate-400 truncate">Guru Bimbingan Konseling</p>
-          </div>
+
+          {onLogout && (
+            <button
+              onClick={onLogout}
+              title="Keluar / Logout"
+              className="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-rose-950/40 rounded-lg transition"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
+          )}
         </div>
       </div>
     </aside>
