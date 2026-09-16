@@ -31,6 +31,7 @@ function CounselingContent() {
   const [loading, setLoading] = useState(true);
   const [filterTriage, setFilterTriage] = useState(initialTriage);
   const [filterHandling, setFilterHandling] = useState("ALL");
+  const [filterStatus, setFilterStatus] = useState("ALL");
   const [searchQuery, setSearchQuery] = useState("");
 
   // Counselor Notes Form state
@@ -46,6 +47,7 @@ function CounselingContent() {
       const params = new URLSearchParams();
       if (filterTriage !== "ALL") params.append("triage", filterTriage);
       if (filterHandling !== "ALL") params.append("handling", filterHandling);
+      if (filterStatus !== "ALL") params.append("status", filterStatus);
       if (searchQuery) params.append("search", searchQuery);
 
       const res = await fetch(`/api/sessions?${params.toString()}`);
@@ -85,17 +87,46 @@ function CounselingContent() {
 
   useEffect(() => {
     fetchSessions();
-  }, [filterTriage, filterHandling]);
+  }, [filterTriage, filterHandling, filterStatus]);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     fetchSessions();
   };
 
+  const handleToggleSessionStatus = async (newStatus: "ACTIVE" | "CLOSED") => {
+    if (!selectedSession) return;
+    try {
+      setSavingNotes(true);
+      const autoHandle = newStatus === "CLOSED" && handlingStatus === "MENUNGGU" ? "SELESAI" : handlingStatus;
+      const res = await fetch(`/api/sessions/${selectedSession.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          status: newStatus,
+          handlingStatus: autoHandle,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setSelectedSession((prev: any) => prev ? { ...prev, status: newStatus, handlingStatus: autoHandle } : null);
+        if (autoHandle === "SELESAI") setHandlingStatus("SELESAI");
+        setSaveSuccess(true);
+        setTimeout(() => setSaveSuccess(false), 3000);
+        fetchSessions(selectedSession.id);
+      }
+    } catch (err) {
+      console.error("Error toggling session status:", err);
+    } finally {
+      setSavingNotes(false);
+    }
+  };
+
   const handleSaveNotes = async () => {
     if (!selectedSession) return;
     try {
       setSavingNotes(true);
+      const shouldClose = handlingStatus === "SELESAI";
       const res = await fetch(`/api/sessions/${selectedSession.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -103,13 +134,16 @@ function CounselingContent() {
           handlingStatus,
           counselorNotes,
           triageLevel: overrideTriage,
+          ...(shouldClose ? { status: "CLOSED" } : {}),
         }),
       });
       const data = await res.json();
       if (data.success) {
+        if (shouldClose) {
+          setSelectedSession((prev: any) => prev ? { ...prev, status: "CLOSED" } : null);
+        }
         setSaveSuccess(true);
         setTimeout(() => setSaveSuccess(false), 3000);
-        // Refresh session list
         fetchSessions(selectedSession.id);
       }
     } catch (err) {
@@ -118,6 +152,7 @@ function CounselingContent() {
       setSavingNotes(false);
     }
   };
+
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
@@ -143,33 +178,61 @@ function CounselingContent() {
 
       {/* Filter Bar */}
       <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Status Sesi Pills */}
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs font-semibold text-slate-500 mr-1 flex items-center gap-1">
+              <Clock className="w-3.5 h-3.5" /> Status Sesi:
+            </span>
+            {[
+              { key: "ALL", label: "Semua" },
+              { key: "ACTIVE", label: "🟢 Aktif" },
+              { key: "CLOSED", label: "⚪ Selesai" },
+            ].map((tab) => (
+              <button
+                key={tab.key}
+                onClick={() => setFilterStatus(tab.key)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
+                  filterStatus === tab.key
+                    ? "bg-indigo-600 text-white shadow-sm"
+                    : "bg-slate-100 hover:bg-slate-200 text-slate-600"
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          <div className="h-4 w-px bg-slate-200 hidden sm:block"></div>
+
           {/* Triage Pills */}
-          <span className="text-xs font-semibold text-slate-500 mr-1 flex items-center gap-1">
-            <Filter className="w-3.5 h-3.5" /> Triase:
-          </span>
-          {[
-            { key: "ALL", label: "Semua" },
-            { key: "MERAH", label: "🔴 Merah (Kritis)" },
-            { key: "KUNING", label: "🟡 Kuning (Sedang)" },
-            { key: "HIJAU", label: "🟢 Hijau (Ringan)" },
-          ].map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => setFilterTriage(tab.key)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
-                filterTriage === tab.key
-                  ? "bg-slate-900 text-white shadow-sm"
-                  : "bg-slate-100 hover:bg-slate-200 text-slate-600"
-              }`}
-            >
-              {tab.label}
-            </button>
-          ))}
+          <div className="flex items-center gap-1.5">
+            <span className="text-xs font-semibold text-slate-500 mr-1 flex items-center gap-1">
+              <Filter className="w-3.5 h-3.5" /> Triase:
+            </span>
+            {[
+              { key: "ALL", label: "Semua" },
+              { key: "MERAH", label: "🔴 Merah (Kritis)" },
+              { key: "KUNING", label: "🟡 Kuning (Sedang)" },
+              { key: "HIJAU", label: "🟢 Hijau (Ringan)" },
+            ].map((tab) => (
+              <button
+                key={tab.key}
+                onClick={() => setFilterTriage(tab.key)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
+                  filterTriage === tab.key
+                    ? "bg-slate-900 text-white shadow-sm"
+                    : "bg-slate-100 hover:bg-slate-200 text-slate-600"
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Search Input */}
-        <form onSubmit={handleSearchSubmit} className="relative min-w-[280px]">
+        <form onSubmit={handleSearchSubmit} className="relative min-w-[260px]">
           <input
             type="text"
             placeholder="Cari nama, username, atau kelas..."
@@ -183,7 +246,7 @@ function CounselingContent() {
 
       {/* Master Detail Grid Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* Left Column: List of Sessions (4 Cols) */}
+        {/* Left Column: List of Sessions (5 Cols) */}
         <div className="lg:col-span-5 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col h-[750px]">
           <div className="p-3.5 border-b border-slate-100 bg-slate-50/70 flex items-center justify-between">
             <span className="text-xs font-bold text-slate-700">
@@ -214,9 +277,18 @@ function CounselingContent() {
                     }`}
                   >
                     <div className="flex items-center justify-between">
-                      <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${triage.badge}`}>
-                        {item.triageLevel}
-                      </span>
+                      <div className="flex items-center gap-1.5">
+                        <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${triage.badge}`}>
+                          {item.triageLevel}
+                        </span>
+                        <span className={`text-[9px] px-1.5 py-0.5 rounded font-semibold ${
+                          item.status === "ACTIVE" 
+                            ? "bg-emerald-50 text-emerald-700 border border-emerald-200" 
+                            : "bg-slate-100 text-slate-500 border border-slate-200"
+                        }`}>
+                          {item.status === "ACTIVE" ? "🟢 Aktif" : "⚪ Selesai"}
+                        </span>
+                      </div>
                       <span className="text-[11px] text-slate-400">
                         {formatDate(item.updatedAt)}
                       </span>
@@ -320,9 +392,36 @@ function CounselingContent() {
                       </span>
                     </div>
 
-                    <span className="text-[11px] text-slate-400">
-                      Sesi: {selectedSession.status === "ACTIVE" ? "🟢 Sedang Aktif" : "⚪ Berakhir"}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-md border ${
+                        selectedSession.status === "ACTIVE"
+                          ? "bg-emerald-100 text-emerald-800 border-emerald-300"
+                          : "bg-slate-200 text-slate-700 border-slate-300"
+                      }`}>
+                        {selectedSession.status === "ACTIVE" ? "🟢 Sedang Aktif" : "⚪ Selesai"}
+                      </span>
+                      {selectedSession.status === "ACTIVE" ? (
+                        <button
+                          type="button"
+                          onClick={() => handleToggleSessionStatus("CLOSED")}
+                          disabled={savingNotes}
+                          className="text-[11px] px-2.5 py-1 bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 font-semibold rounded-lg shadow-xs transition"
+                          title="Tandai sesi ini telah selesai"
+                        >
+                          Selesaikan Sesi
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => handleToggleSessionStatus("ACTIVE")}
+                          disabled={savingNotes}
+                          className="text-[11px] px-2.5 py-1 bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 font-semibold rounded-lg shadow-xs transition"
+                          title="Buka kembali sesi konseling ini"
+                        >
+                          Buka Kembali
+                        </button>
+                      )}
+                    </div>
                   </div>
 
                   <p className="text-xs text-slate-700">
@@ -414,6 +513,9 @@ function CounselingContent() {
                       <option value="PROSES">Sedang Ditangani Guru BK</option>
                       <option value="SELESAI">Selesai Ditangani</option>
                     </select>
+                    <p className="text-[10px] text-slate-400 mt-1">
+                      * Memilih <strong>Selesai Ditangani</strong> otomatis menutup sesi konseling ini.
+                    </p>
                   </div>
 
                   <div>
