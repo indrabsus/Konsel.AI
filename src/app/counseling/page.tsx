@@ -194,7 +194,7 @@ function CounselingContent() {
                 onClick={() => setFilterStatus(tab.key)}
                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
                   filterStatus === tab.key
-                    ? "bg-indigo-600 text-white shadow-sm"
+                    ? "bg-slate-900 text-white shadow-xs"
                     : "bg-slate-100 hover:bg-slate-200 text-slate-600"
                 }`}
               >
@@ -221,7 +221,7 @@ function CounselingContent() {
                 onClick={() => setFilterTriage(tab.key)}
                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
                   filterTriage === tab.key
-                    ? "bg-slate-900 text-white shadow-sm"
+                    ? "bg-slate-900 text-white shadow-xs"
                     : "bg-slate-100 hover:bg-slate-200 text-slate-600"
                 }`}
               >
@@ -238,7 +238,7 @@ function CounselingContent() {
             placeholder="Cari nama, username, atau kelas..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-4 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white"
+            className="w-full pl-9 pr-4 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-400 focus:bg-white"
           />
           <Search className="w-4 h-4 text-slate-400 absolute left-2.5 top-2" />
         </form>
@@ -272,7 +272,7 @@ function CounselingContent() {
                     onClick={() => fetchSessionDetail(item.id)}
                     className={`w-full text-left p-4 transition flex flex-col gap-2 ${
                       isSelected
-                        ? "bg-indigo-50/60 border-l-4 border-indigo-600"
+                        ? "bg-slate-100/80 border-l-4 border-slate-900"
                         : "hover:bg-slate-50"
                     }`}
                   >
@@ -340,7 +340,7 @@ function CounselingContent() {
               <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
                   <div className="flex items-center gap-3.5">
-                    <div className="w-12 h-12 rounded-2xl bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-base">
+                    <div className="w-12 h-12 rounded-2xl bg-slate-100 border border-slate-200 text-slate-800 flex items-center justify-center font-bold text-base">
                       {selectedSession.student?.name?.[0] || "S"}
                     </div>
                     <div>
@@ -359,7 +359,7 @@ function CounselingContent() {
                         href={`https://wa.me/${selectedSession.student.phone.replace(/^0/, "62")}`}
                         target="_blank"
                         rel="noreferrer"
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold shadow-sm transition"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold shadow-xs transition"
                       >
                         <Phone className="w-3.5 h-3.5" />
                         Chat WA Siswa
@@ -370,7 +370,7 @@ function CounselingContent() {
                         href={`https://wa.me/${selectedSession.student.parentPhone.replace(/^0/, "62")}`}
                         target="_blank"
                         rel="noreferrer"
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold shadow-sm transition"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold shadow-xs transition"
                       >
                         <Phone className="w-3.5 h-3.5" />
                         Hubungi Ortu
@@ -380,23 +380,23 @@ function CounselingContent() {
                 </div>
 
                 {/* AI Triage Analysis Banner */}
-                <div className="mt-4 p-4 rounded-xl border bg-slate-50 space-y-2">
+                <div className="mt-4 p-4 rounded-xl border border-slate-200/80 bg-slate-50/70 space-y-2">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <span className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-                        <Sparkles className="w-3.5 h-3.5 text-indigo-600" />
+                        <Sparkles className="w-3.5 h-3.5 text-slate-600" />
                         Analisis Triase AI:
                       </span>
-                      <span className={`text-xs px-2.5 py-0.5 rounded-full font-bold ${getTriageBadgeColor(selectedSession.triageLevel).badge}`}>
+                      <span className={`text-[11px] px-2.5 py-0.5 rounded-md ${getTriageBadgeColor(selectedSession.triageLevel).badge}`}>
                         {selectedSession.triageLevel}
                       </span>
                     </div>
 
                     <div className="flex items-center gap-2">
-                      <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-md border ${
+                      <span className={`text-[11px] font-medium px-2 py-0.5 rounded-md border ${
                         selectedSession.status === "ACTIVE"
-                          ? "bg-emerald-100 text-emerald-800 border-emerald-300"
-                          : "bg-slate-200 text-slate-700 border-slate-300"
+                          ? "bg-emerald-50 text-emerald-800 border-emerald-200"
+                          : "bg-slate-100 text-slate-700 border-slate-200"
                       }`}>
                         {selectedSession.status === "ACTIVE" ? "🟢 Sedang Aktif" : "⚪ Selesai"}
                       </span>
@@ -405,7 +405,7 @@ function CounselingContent() {
                           type="button"
                           onClick={() => handleToggleSessionStatus("CLOSED")}
                           disabled={savingNotes}
-                          className="text-[11px] px-2.5 py-1 bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 font-semibold rounded-lg shadow-xs transition"
+                          className="text-[11px] px-2.5 py-1 bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 font-semibold rounded-lg shadow-xs transition cursor-pointer"
                           title="Tandai sesi ini telah selesai"
                         >
                           Selesaikan Sesi
@@ -415,7 +415,7 @@ function CounselingContent() {
                           type="button"
                           onClick={() => handleToggleSessionStatus("ACTIVE")}
                           disabled={savingNotes}
-                          className="text-[11px] px-2.5 py-1 bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 font-semibold rounded-lg shadow-xs transition"
+                          className="text-[11px] px-2.5 py-1 bg-white hover:bg-slate-100 border border-slate-300 text-slate-700 font-semibold rounded-lg shadow-xs transition cursor-pointer"
                           title="Buka kembali sesi konseling ini"
                         >
                           Buka Kembali
@@ -489,7 +489,7 @@ function CounselingContent() {
               <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-4">
                 <div className="flex items-center justify-between">
                   <h4 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-                    <Save className="w-4 h-4 text-indigo-600" />
+                    <Save className="w-4 h-4 text-slate-700" />
                     Formulir Tindak Lanjut Guru BK
                   </h4>
                   {saveSuccess && (
@@ -507,7 +507,7 @@ function CounselingContent() {
                     <select
                       value={handlingStatus}
                       onChange={(e) => setHandlingStatus(e.target.value)}
-                      className="w-full text-xs p-2 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                      className="w-full text-xs p-2 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-400 focus:outline-none"
                     >
                       <option value="MENUNGGU">Menunggu Tindakan</option>
                       <option value="PROSES">Sedang Ditangani Guru BK</option>
@@ -525,7 +525,7 @@ function CounselingContent() {
                     <select
                       value={overrideTriage}
                       onChange={(e) => setOverrideTriage(e.target.value)}
-                      className="w-full text-xs p-2 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                      className="w-full text-xs p-2 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-400 focus:outline-none"
                     >
                       <option value="HIJAU">🟢 HIJAU (Ringan / Masalah Sepele)</option>
                       <option value="KUNING">🟡 KUNING (Sedang / Perlu Bimbingan)</option>
@@ -543,7 +543,7 @@ function CounselingContent() {
                     placeholder="Contoh: Siswa sudah dipanggil ke ruang BK pukul 09:30. Dilakukan konseling empat mata dan telah dikonfirmasi dengan wali kelas..."
                     value={counselorNotes}
                     onChange={(e) => setCounselorNotes(e.target.value)}
-                    className="w-full text-xs p-3 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                    className="w-full text-xs p-3 bg-slate-50 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-400 focus:outline-none"
                   />
                 </div>
 
@@ -551,7 +551,7 @@ function CounselingContent() {
                   <button
                     onClick={handleSaveNotes}
                     disabled={savingNotes}
-                    className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold shadow-md shadow-indigo-500/20 transition disabled:opacity-50"
+                    className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold shadow-xs transition disabled:opacity-50 cursor-pointer"
                   >
                     <Save className="w-4 h-4" />
                     {savingNotes ? "Menyimpan..." : "Simpan Catatan & Update Status"}
@@ -571,8 +571,8 @@ export default function CounselingPage() {
     <Suspense
       fallback={
         <div className="flex flex-col items-center justify-center min-h-[450px] gap-3">
-          <RefreshCw className="w-8 h-8 text-indigo-600 animate-spin" />
-          <p className="text-sm text-slate-500 font-medium">Memuat log konseling...</p>
+          <RefreshCw className="w-6 h-6 text-slate-400 animate-spin" />
+          <p className="text-xs text-slate-500 font-medium">Memuat log konseling...</p>
         </div>
       }
     >

@@ -73,8 +73,8 @@ export default function Sidebar({
           </div>
           <div>
             <h1 className="font-bold text-white text-base tracking-wide flex items-center gap-1.5">
-              Konsel<span className="text-indigo-400">.AI</span>
-              <span className="text-[10px] bg-indigo-500/20 text-indigo-300 font-semibold px-1.5 py-0.5 rounded border border-indigo-500/30">
+              Konsel.AI
+              <span className="text-[10px] bg-slate-800 text-slate-300 font-semibold px-1.5 py-0.5 rounded border border-slate-700">
                 BK
               </span>
             </h1>
@@ -107,21 +107,21 @@ export default function Sidebar({
               className={cn(
                 "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all group",
                 isActive
-                  ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/30"
-                  : "text-slate-400 hover:text-slate-100 hover:bg-slate-800/70"
+                  ? "bg-slate-800 text-white border border-slate-700/80 shadow-xs"
+                  : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/50"
               )}
             >
               <Icon
                 className={cn(
                   "w-5 h-5 transition-colors shrink-0",
-                  isActive ? "text-white" : "text-slate-400 group-hover:text-indigo-400"
+                  isActive ? "text-white" : "text-slate-400 group-hover:text-slate-200"
                 )}
               />
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between">
                   <span className="truncate">{item.label}</span>
                   {item.badge && (
-                    <span className="text-[10px] font-semibold bg-indigo-400/20 text-indigo-300 px-1.5 py-0.5 rounded border border-indigo-400/30">
+                    <span className="text-[10px] font-semibold bg-slate-700 text-slate-200 px-1.5 py-0.5 rounded border border-slate-600">
                       {item.badge}
                     </span>
                   )}
@@ -135,27 +135,27 @@ export default function Sidebar({
         })}
       </nav>
 
-      {/* Triage Quick Info Card - Re-positioned and Redesigned */}
-      <div className="mx-3 my-2 p-3 rounded-xl bg-slate-800/60 border border-slate-700/60">
-        <div className="text-[11px] font-semibold text-slate-300 uppercase tracking-wider mb-2 flex items-center justify-between">
+      {/* Triage Quick Info Card - Elegant Clean Breakdown */}
+      <div className="mx-3 my-2 p-3 rounded-xl bg-slate-800/40 border border-slate-800/80">
+        <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2 flex items-center justify-between">
           <span>Status Triase Kasus</span>
           <Link
             href="/counseling"
             onClick={() => onCloseMobile?.()}
-            className="text-[10px] text-indigo-400 hover:text-indigo-300 font-medium transition"
+            className="text-[10px] text-slate-400 hover:text-white font-medium transition"
           >
             Buka Log →
           </Link>
         </div>
-        <div className="space-y-1.5">
+        <div className="space-y-1">
           <Link
             href="/counseling?triage=HIJAU"
             onClick={() => onCloseMobile?.()}
-            className="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-emerald-950/40 hover:bg-emerald-950/80 border border-emerald-800/40 text-xs transition group"
+            className="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-slate-800/40 hover:bg-slate-800/90 border border-slate-700/40 text-xs transition group"
           >
-            <span className="flex items-center gap-2 text-emerald-300 font-medium text-[11px]">
-              <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
-              🟢 Hijau (Ringan)
+            <span className="flex items-center gap-2 text-slate-300 font-medium text-[11px]">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+              Hijau (Ringan)
             </span>
             <span className="text-[10px] text-slate-400 group-hover:text-slate-200">Umum</span>
           </Link>
@@ -163,11 +163,11 @@ export default function Sidebar({
           <Link
             href="/counseling?triage=KUNING"
             onClick={() => onCloseMobile?.()}
-            className="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-amber-950/40 hover:bg-amber-950/80 border border-amber-800/40 text-xs transition group"
+            className="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-slate-800/40 hover:bg-slate-800/90 border border-slate-700/40 text-xs transition group"
           >
-            <span className="flex items-center gap-2 text-amber-300 font-medium text-[11px]">
-              <span className="w-2 h-2 rounded-full bg-amber-400"></span>
-              🟡 Kuning (Sedang)
+            <span className="flex items-center gap-2 text-slate-300 font-medium text-[11px]">
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
+              Kuning (Sedang)
             </span>
             <span className="text-[10px] text-slate-400 group-hover:text-slate-200">Perhatian BK</span>
           </Link>
@@ -175,13 +175,13 @@ export default function Sidebar({
           <Link
             href="/counseling?triage=MERAH"
             onClick={() => onCloseMobile?.()}
-            className="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-rose-950/40 hover:bg-rose-950/80 border border-rose-800/40 text-xs transition group"
+            className="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-slate-800/40 hover:bg-slate-800/90 border border-slate-700/40 text-xs transition group"
           >
-            <span className="flex items-center gap-2 text-rose-300 font-bold text-[11px]">
-              <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
-              🔴 Merah (Kritis)
+            <span className="flex items-center gap-2 text-slate-300 font-medium text-[11px]">
+              <span className="w-1.5 h-1.5 rounded-full bg-rose-500"></span>
+              Merah (Kritis)
             </span>
-            <span className="text-[10px] text-rose-400 font-bold group-hover:text-rose-300">Tindakan Segera</span>
+            <span className="text-[10px] text-rose-400 font-medium group-hover:text-rose-300">Tindakan Segera</span>
           </Link>
         </div>
       </div>
@@ -191,7 +191,7 @@ export default function Sidebar({
         {/* Model server status badge */}
         <div className="p-2.5 rounded-lg bg-slate-950/50 border border-slate-800 text-xs flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
             <div>
               <p className="text-slate-300 font-semibold text-[11px]">Ollama qwen2.5:7b</p>
               <p className="text-[10px] text-slate-400 truncate max-w-[130px]">
@@ -199,7 +199,7 @@ export default function Sidebar({
               </p>
             </div>
           </div>
-          <span className="text-[10px] text-emerald-400 font-medium bg-emerald-500/10 px-1.5 py-0.5 rounded border border-emerald-500/20">
+          <span className="text-[10px] text-slate-300 font-medium bg-slate-800 px-1.5 py-0.5 rounded border border-slate-700">
             Aktif
           </span>
         </div>
@@ -207,12 +207,12 @@ export default function Sidebar({
         {/* User profile & Logout */}
         <div className="flex items-center justify-between pt-1">
           <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-8 h-8 rounded-full bg-indigo-700 flex items-center justify-center text-white font-bold text-xs">
+            <div className="w-8 h-8 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-slate-200 font-bold text-xs">
               AD
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-xs font-semibold text-slate-200 truncate">Administrator</p>
-              <p className="text-[11px] text-indigo-400 truncate font-mono">admin</p>
+              <p className="text-[11px] text-slate-400 truncate font-mono">admin</p>
             </div>
           </div>
 
@@ -220,7 +220,7 @@ export default function Sidebar({
             <button
               onClick={onLogout}
               title="Keluar / Logout"
-              className="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-rose-950/40 rounded-lg transition"
+              className="p-1.5 text-slate-400 hover:text-rose-400 hover:bg-slate-800 rounded-lg transition"
             >
               <LogOut className="w-4 h-4" />
             </button>

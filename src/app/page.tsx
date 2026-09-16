@@ -45,8 +45,8 @@ export default function DashboardPage() {
   if (loading && !data) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[450px] gap-3">
-        <RefreshCw className="w-8 h-8 text-indigo-600 animate-spin" />
-        <p className="text-sm text-slate-500 font-medium">Memuat data dashboard Konsel.AI...</p>
+        <RefreshCw className="w-6 h-6 text-slate-400 animate-spin" />
+        <p className="text-xs text-slate-500 font-medium">Memuat data dashboard Konsel.AI...</p>
       </div>
     );
   }
@@ -60,60 +60,63 @@ export default function DashboardPage() {
       {/* Top Header with Refresh Button */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 flex flex-wrap items-center gap-2 sm:gap-2.5">
-            Dashboard Bimbingan Konseling
-            <span className="text-xs font-semibold px-2.5 py-1 bg-indigo-100 text-indigo-700 rounded-full">
+          <div className="flex items-center gap-2.5">
+            <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
+              Dashboard Bimbingan Konseling
+            </h1>
+            <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold px-2.5 py-0.5 bg-slate-100 text-slate-700 rounded-full border border-slate-200">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
               Live Monitoring
             </span>
-          </h1>
+          </div>
           <p className="text-xs sm:text-sm text-slate-500 mt-1">
-            Pantau curhat dan kondisi psikologis siswa dari bot WhatsApp secara otomatis dengan klasifikasi triase AI.
+            Pantauan otomatis riwayat curhat siswa WhatsApp dengan evaluasi triase AI dan catatan penanganan Guru BK.
           </p>
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
           <button
             onClick={fetchStats}
-            className="flex-1 sm:flex-none justify-center flex items-center gap-2 px-3.5 py-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded-lg shadow-sm transition"
+            className="flex-1 sm:flex-none justify-center flex items-center gap-2 px-3.5 py-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 text-xs font-semibold rounded-lg shadow-xs transition cursor-pointer"
           >
             <RefreshCw className="w-3.5 h-3.5" />
             Perbarui Data
           </button>
           <Link
             href="/simulator"
-            className="flex-1 sm:flex-none justify-center flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold rounded-lg shadow-md shadow-indigo-500/20 transition"
+            className="flex-1 sm:flex-none justify-center flex items-center gap-2 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-lg shadow-xs transition"
           >
             <Bot className="w-4 h-4" />
-            Uji Simulator AI
+            Uji Simulator
           </Link>
         </div>
       </div>
 
       {/* URGENT RED ALERT BANNER (If any pending critical cases) */}
       {urgentCases.length > 0 && (
-        <div className="p-4 rounded-2xl bg-gradient-to-r from-red-500/15 via-red-500/10 to-rose-500/5 border-2 border-red-500/40 shadow-sm relative overflow-hidden">
+        <div className="p-4 rounded-xl bg-rose-50/80 border border-rose-200 shadow-xs relative">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="flex items-start gap-3.5">
-              <div className="w-10 h-10 rounded-xl bg-red-600 text-white flex items-center justify-center shrink-0 shadow-lg shadow-red-600/30 animate-bounce">
+              <div className="w-9 h-9 rounded-lg bg-rose-600 text-white flex items-center justify-center shrink-0 shadow-xs">
                 <AlertTriangle className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-sm font-bold text-red-900 flex items-center gap-2">
-                  PERINGATAN KRITIS: {urgentCases.length} Siswa Membutuhkan Tindakan Darurat Guru BK Segera!
+                <h3 className="text-sm font-bold text-rose-900 flex items-center gap-2">
+                  PERINGATAN KRITIS: {urgentCases.length} Siswa Membutuhkan Tindakan Darurat Guru BK Segera
                 </h3>
-                <p className="text-xs text-red-700 mt-0.5 max-w-3xl">
-                  AI mendeteksi indikasi bahaya keselamatan diri/krisis pada siswa berikut:{" "}
-                  <strong>{urgentCases.map((c: any) => `${c.student?.name} (${c.student?.class})`).join(", ")}</strong>.
-                  Notifikasi telah dikirimkan ke WhatsApp Guru BK.
+                <p className="text-xs text-rose-800/90 mt-0.5 max-w-3xl leading-relaxed">
+                  AI mendeteksi indikasi bahaya keselamatan diri/krisis pada siswa:{" "}
+                  <span className="font-semibold">{urgentCases.map((c: any) => `${c.student?.name} (${c.student?.class})`).join(", ")}</span>.
+                  Notifikasi darurat telah dikirimkan ke nomor WhatsApp Guru BK.
                 </p>
               </div>
             </div>
 
             <Link
               href="/counseling?triage=MERAH"
-              className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-bold shadow-md shadow-red-600/20 transition shrink-0"
+              className="inline-flex items-center justify-center gap-2 px-3.5 py-2 rounded-lg bg-rose-700 hover:bg-rose-800 text-white text-xs font-semibold shadow-xs transition shrink-0"
             >
-              Lihat Kasus Kritis & Tindak Lanjut
+              Lihat Kasus Kritis
               <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
@@ -123,71 +126,75 @@ export default function DashboardPage() {
       {/* METRIC CARDS */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
         {/* Total Konseling */}
-        <div className="bg-white p-3.5 sm:p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
+        <div className="bg-white p-4 rounded-xl border border-slate-200/80 shadow-xs flex flex-col justify-between">
           <div className="flex items-center justify-between text-slate-500 mb-2">
-            <span className="text-xs font-medium">Total Konseling</span>
-            <MessageSquare className="w-4 h-4 text-indigo-500" />
+            <span className="text-xs font-medium text-slate-500">Total Sesi</span>
+            <MessageSquare className="w-4 h-4 text-slate-400" />
           </div>
-          <div className="text-2xl font-bold text-slate-900">{stats.totalSessions || 0}</div>
-          <span className="text-[11px] text-slate-400 mt-1">Seluruh sesi siswa</span>
+          <div className="text-2xl font-bold text-slate-900 tracking-tight">{stats.totalSessions || 0}</div>
+          <span className="text-[11px] text-slate-400 mt-1">Seluruh riwayat</span>
         </div>
 
         {/* Sesi Aktif */}
-        <div className="bg-white p-3.5 sm:p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
+        <div className="bg-white p-4 rounded-xl border border-slate-200/80 shadow-xs flex flex-col justify-between">
           <div className="flex items-center justify-between text-slate-500 mb-2">
-            <span className="text-xs font-medium">Sesi Aktif</span>
-            <Clock className="w-4 h-4 text-emerald-500" />
+            <span className="text-xs font-medium text-slate-500">Sesi Aktif</span>
+            <Clock className="w-4 h-4 text-slate-400" />
           </div>
-          <div className="text-2xl font-bold text-slate-900">{stats.activeSessions || 0}</div>
-          <span className="text-[11px] text-emerald-600 font-medium mt-1">Sedang berlangsung</span>
+          <div className="text-2xl font-bold text-slate-900 tracking-tight">{stats.activeSessions || 0}</div>
+          <span className="text-[11px] text-slate-500 font-medium mt-1 flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Berlangsung
+          </span>
         </div>
 
         {/* Total Siswa */}
-        <div className="bg-white p-3.5 sm:p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-between">
+        <div className="bg-white p-4 rounded-xl border border-slate-200/80 shadow-xs flex flex-col justify-between">
           <div className="flex items-center justify-between text-slate-500 mb-2">
-            <span className="text-xs font-medium">Siswa Terdaftar</span>
-            <Users className="w-4 h-4 text-blue-500" />
+            <span className="text-xs font-medium text-slate-500">Siswa Terdaftar</span>
+            <Users className="w-4 h-4 text-slate-400" />
           </div>
-          <div className="text-2xl font-bold text-slate-900">{stats.totalStudents || 0}</div>
+          <div className="text-2xl font-bold text-slate-900 tracking-tight">{stats.totalStudents || 0}</div>
           <span className="text-[11px] text-slate-400 mt-1">Akun login WA</span>
         </div>
 
         {/* Hijau (Ringan) */}
-        <div className="bg-emerald-50/50 p-3.5 sm:p-4 rounded-xl border border-emerald-200/80 shadow-sm flex flex-col justify-between">
-          <div className="flex items-center justify-between text-emerald-700 mb-2">
-            <span className="text-xs font-bold">🟢 Hijau</span>
+        <div className="bg-white p-4 rounded-xl border border-slate-200/80 shadow-xs flex flex-col justify-between">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs font-medium text-slate-500">Triase Ringan</span>
+            <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
           </div>
-          <div className="text-2xl font-bold text-emerald-700">{stats.countHijau || 0}</div>
-          <span className="text-[11px] text-emerald-600 mt-1">Curhat biasa</span>
+          <div className="text-2xl font-bold text-slate-900 tracking-tight">{stats.countHijau || 0}</div>
+          <span className="text-[11px] text-slate-400 mt-1">Konseling rutin</span>
         </div>
 
         {/* Kuning (Sedang) */}
-        <div className="bg-amber-50/50 p-3.5 sm:p-4 rounded-xl border border-amber-200/80 shadow-sm flex flex-col justify-between">
-          <div className="flex items-center justify-between text-amber-700 mb-2">
-            <span className="text-xs font-bold">🟡 Kuning</span>
+        <div className="bg-white p-4 rounded-xl border border-slate-200/80 shadow-xs flex flex-col justify-between">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs font-medium text-slate-500">Triase Sedang</span>
+            <span className="w-2 h-2 rounded-full bg-amber-500"></span>
           </div>
-          <div className="text-2xl font-bold text-amber-700">{stats.countKuning || 0}</div>
-          <span className="text-[11px] text-amber-600 mt-1">Perhatian BK</span>
+          <div className="text-2xl font-bold text-slate-900 tracking-tight">{stats.countKuning || 0}</div>
+          <span className="text-[11px] text-slate-400 mt-1">Perhatian BK</span>
         </div>
 
         {/* Merah (Kritis) */}
-        <div className="bg-red-50/70 p-3.5 sm:p-4 rounded-xl border border-red-300 shadow-sm flex flex-col justify-between">
-          <div className="flex items-center justify-between text-red-700 mb-2">
-            <span className="text-xs font-bold">🔴 Merah</span>
-            <AlertTriangle className="w-4 h-4 text-red-600" />
+        <div className="bg-white p-4 rounded-xl border border-slate-200/80 shadow-xs flex flex-col justify-between">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs font-medium text-slate-500">Triase Kritis</span>
+            <span className="w-2 h-2 rounded-full bg-rose-500"></span>
           </div>
-          <div className="text-2xl font-bold text-red-700">{stats.countMerah || 0}</div>
-          <span className="text-[11px] text-red-600 font-bold mt-1">Tindakan darurat</span>
+          <div className="text-2xl font-bold text-slate-900 tracking-tight">{stats.countMerah || 0}</div>
+          <span className="text-[11px] text-rose-600 font-medium mt-1">Tindakan darurat</span>
         </div>
       </div>
 
       {/* TWO COLUMN CONTENT: Urgent/Pending Action on Left, Recent Feed on Right */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Kasus Perlu Penanganan (8 Cols) */}
-        <div className="lg:col-span-8 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
+        <div className="lg:col-span-8 bg-white rounded-2xl border border-slate-200/80 shadow-xs overflow-hidden flex flex-col">
           <div className="p-4 sm:p-5 border-b border-slate-100 flex items-center justify-between">
             <div className="flex items-center gap-2.5">
-              <div className="p-2 rounded-lg bg-indigo-50 text-indigo-600">
+              <div className="p-2 rounded-lg bg-slate-100 text-slate-700">
                 <ShieldAlert className="w-5 h-5" />
               </div>
               <div>
@@ -202,7 +209,7 @@ export default function DashboardPage() {
 
             <Link
               href="/counseling"
-              className="text-xs font-semibold text-indigo-600 hover:text-indigo-700 flex items-center gap-1"
+              className="text-xs font-semibold text-slate-700 hover:text-slate-900 flex items-center gap-1 transition"
             >
               Semua Kasus <ArrowRight className="w-3.5 h-3.5" />
             </Link>
@@ -211,17 +218,17 @@ export default function DashboardPage() {
           <div className="p-4 sm:p-5 flex-1">
             {urgentCases.length === 0 && stats.countPendingAction === 0 ? (
               <div className="p-8 text-center flex flex-col items-center justify-center text-slate-400">
-                <CheckCircle2 className="w-12 h-12 text-emerald-500 mb-2" />
+                <CheckCircle2 className="w-10 h-10 text-emerald-500 mb-2" />
                 <p className="text-sm font-semibold text-slate-700">
-                  Luar biasa! Tidak ada kasus kritis yang tertunda.
+                  Tidak ada kasus kritis yang tertunda.
                 </p>
                 <p className="text-xs text-slate-500 max-w-sm mt-0.5">
-                  Semua masalah siswa berada di tingkat aman atau sudah ditangani oleh Guru BK.
+                  Semua masalah siswa berada di tingkat aman atau sudah selesai ditangani oleh Guru BK.
                 </p>
               </div>
             ) : urgentCases.length === 0 ? (
               <div className="p-8 text-center flex flex-col items-center justify-center text-slate-400">
-                <CheckCircle2 className="w-12 h-12 text-emerald-500 mb-2" />
+                <CheckCircle2 className="w-10 h-10 text-emerald-500 mb-2" />
                 <p className="text-sm font-semibold text-slate-700">
                   Tidak ada kasus darurat tingkat kritis (Merah).
                 </p>
@@ -230,7 +237,7 @@ export default function DashboardPage() {
                 </p>
                 <Link
                   href="/counseling"
-                  className="mt-3.5 inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-semibold rounded-lg transition"
+                  className="mt-3.5 inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg transition"
                 >
                   Buka Log Konseling <ArrowRight className="w-3.5 h-3.5" />
                 </Link>
@@ -244,14 +251,14 @@ export default function DashboardPage() {
                   return (
                     <div
                       key={item.id}
-                      className="p-4 rounded-xl border border-slate-200 hover:border-slate-300 transition bg-slate-50/50 flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                      className="p-4 rounded-xl border border-slate-200/80 hover:border-slate-300 transition bg-white flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs"
                     >
                       <div className="space-y-1">
                         <div className="flex items-center gap-2">
-                          <span className={`text-xs px-2.5 py-0.5 rounded-full font-bold ${triage.badge}`}>
+                          <span className={`text-[11px] px-2 py-0.5 rounded-md ${triage.badge}`}>
                             {item.triageLevel}
                           </span>
-                          <span className={`text-[11px] px-2 py-0.5 rounded border font-medium ${handling.badge}`}>
+                          <span className={`text-[11px] px-2 py-0.5 rounded-md border ${handling.badge}`}>
                             {handling.label}
                           </span>
                           <span className="text-xs text-slate-400">
@@ -264,7 +271,7 @@ export default function DashboardPage() {
                             ({item.student.class} - {item.student.username || item.student.nisn})
                           </span>
                         </h4>
-                        <p className="text-xs text-slate-600 line-clamp-2">
+                        <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed">
                           {item.summary || item.triageReason || "Siswa membutuhkan pendampingan konseling."}
                         </p>
                       </div>
@@ -272,7 +279,7 @@ export default function DashboardPage() {
                       <div className="shrink-0 flex sm:flex-col items-end gap-2">
                         <Link
                           href={`/counseling?session=${item.id}`}
-                          className="px-3.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold shadow-sm transition"
+                          className="px-3.5 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold shadow-xs transition"
                         >
                           Buka & Tangani
                         </Link>
@@ -286,7 +293,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Aktivitas Konseling Terkini (4 Cols) */}
-        <div className="lg:col-span-4 bg-white rounded-2xl border border-slate-200 shadow-sm p-5 flex flex-col justify-between">
+        <div className="lg:col-span-4 bg-white rounded-2xl border border-slate-200/80 shadow-xs p-5 flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
@@ -296,7 +303,7 @@ export default function DashboardPage() {
               <span className="text-[11px] text-slate-400">Realtime</span>
             </div>
 
-            <div className="space-y-3.5">
+            <div className="space-y-3">
               {recentSessions.length === 0 ? (
                 <p className="text-xs text-slate-400 py-6 text-center">
                   Belum ada sesi konseling siswa.
@@ -308,13 +315,13 @@ export default function DashboardPage() {
                     <Link
                       key={session.id}
                       href={`/counseling?session=${session.id}`}
-                      className="block p-3 rounded-xl border border-slate-100 hover:border-indigo-200 hover:bg-indigo-50/30 transition group"
+                      className="block p-3 rounded-xl border border-slate-100 hover:border-slate-200 hover:bg-slate-50/70 transition group"
                     >
                       <div className="flex items-center justify-between mb-1">
-                        <span className="text-xs font-bold text-slate-800 group-hover:text-indigo-600 transition">
+                        <span className="text-xs font-bold text-slate-800 group-hover:text-slate-900 transition">
                           {session.student.name}
                         </span>
-                        <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${triage.badge}`}>
+                        <span className={`text-[10px] px-2 py-0.5 rounded-md ${triage.badge}`}>
                           {session.triageLevel}
                         </span>
                       </div>
@@ -334,13 +341,13 @@ export default function DashboardPage() {
           </div>
 
           {/* Quick Guide Card */}
-          <div className="mt-5 p-3.5 rounded-xl bg-slate-900 text-slate-200">
-            <div className="flex items-center gap-2 mb-2">
-              <Sparkles className="w-4 h-4 text-amber-400" />
-              <span className="text-xs font-bold text-white">Alur Konsel.AI</span>
+          <div className="mt-5 p-4 rounded-xl bg-slate-50 border border-slate-200/80 text-slate-700">
+            <div className="flex items-center gap-2 mb-1.5">
+              <ShieldAlert className="w-4 h-4 text-slate-600" />
+              <span className="text-xs font-bold text-slate-900">Alur Kerja Konsel.AI</span>
             </div>
-            <p className="text-[11px] text-slate-400 leading-relaxed">
-              Siswa membuka menu <strong>Konsel.AI</strong> di Bot WhatsApp, memasukkan Username & password, lalu curhat secara langsung. Sistem secara otomatis men-triase masalah dan memberi peringatan ke nomor WhatsApp Guru BK jika terdeteksi masalah darurat.
+            <p className="text-[11px] text-slate-500 leading-relaxed">
+              Siswa login dengan Username & Password di WhatsApp, lalu berdiskusi dengan AI. Sistem mengklasifikasikan risiko psikologis dan mengirim peringatan langsung ke Guru BK jika terdeteksi masalah kritis.
             </p>
           </div>
         </div>
