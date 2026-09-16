@@ -62,7 +62,7 @@ export default function SimulatorPage() {
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  }, [messages, sending]);
 
   const handleStudentSelect = (user: string) => {
     const s = students.find((item) => (item.username || item.nisn) === user);
@@ -265,10 +265,17 @@ export default function SimulatorPage() {
                     Bot Resmi BK
                   </span>
                 </h3>
-                <p className="text-[11px] text-emerald-100 flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-emerald-300 animate-pulse"></span>
-                  Online (Qwen 2.5:7b)
-                </p>
+                {sending ? (
+                  <p className="text-[11px] text-emerald-200 font-semibold italic flex items-center gap-1.5 animate-pulse">
+                    <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
+                    sedang mengetik...
+                  </p>
+                ) : (
+                  <p className="text-[11px] text-emerald-100 flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-emerald-300 animate-pulse"></span>
+                    Online (Qwen 2.5:7b)
+                  </p>
+                )}
               </div>
             </div>
 
