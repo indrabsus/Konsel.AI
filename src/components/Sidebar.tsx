@@ -58,9 +58,9 @@ export default function Sidebar({
   const pathname = usePathname();
 
   return (
-    <aside className="w-64 bg-slate-900 text-slate-200 min-h-screen flex flex-col border-r border-slate-800 shrink-0">
+    <aside className="w-64 bg-slate-900 text-slate-200 h-full flex flex-col border-r border-slate-800 shrink-0">
       {/* Brand Header */}
-      <div className="p-5 border-b border-slate-800 flex items-center justify-between">
+      <div className="p-5 border-b border-slate-800 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 flex items-center justify-center shrink-0">
             <Image
@@ -136,7 +136,7 @@ export default function Sidebar({
       </nav>
 
       {/* Triage Quick Info Card - Elegant Clean Breakdown */}
-      <div className="mx-3 my-2 p-3 rounded-xl bg-slate-800/40 border border-slate-800/80">
+      <div className="mx-3 my-2 p-3 rounded-xl bg-slate-800/40 border border-slate-800/80 shrink-0">
         <div className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2 flex items-center justify-between">
           <span>Status Triase Kasus</span>
           <Link
@@ -187,7 +187,7 @@ export default function Sidebar({
       </div>
 
       {/* AI Model Status & User Info */}
-      <div className="p-4 border-t border-slate-800 space-y-3">
+      <div className="p-4 border-t border-slate-800 space-y-3 shrink-0">
         {/* Model server status badge */}
         <div className="p-2.5 rounded-lg bg-slate-950/50 border border-slate-800 text-xs flex items-center justify-between">
           <div className="flex items-center gap-2">

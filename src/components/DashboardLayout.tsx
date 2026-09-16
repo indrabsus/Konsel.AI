@@ -37,8 +37,8 @@ export default function DashboardLayout({
 
   return (
     <div className="flex min-h-screen bg-slate-50 relative">
-      {/* Desktop Fixed Sidebar */}
-      <div className="hidden lg:block shrink-0">
+      {/* Desktop Sticky Full-Height Sidebar */}
+      <div className="hidden lg:block shrink-0 sticky top-0 h-screen z-30 bg-slate-900">
         <Sidebar onLogout={handleLogout} />
       </div>
 
@@ -52,7 +52,7 @@ export default function DashboardLayout({
       )}
       <div
         className={cn(
-          "fixed inset-y-0 left-0 z-50 w-64 transform transition-transform duration-300 ease-in-out lg:hidden shadow-2xl",
+          "fixed inset-y-0 left-0 z-50 w-64 transform transition-transform duration-300 ease-in-out lg:hidden shadow-2xl h-screen bg-slate-900",
           mobileMenuOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
